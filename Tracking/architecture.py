@@ -1,5 +1,7 @@
 import math
 import datetime as dt
+import cv2
+import os
 
 class Face:
 	def __init__(self, useFeatures=False):
@@ -91,7 +93,9 @@ class Face:
 		pass
 
 class Video:
-	def __init__(self, frameGap=10):
+	def __init__(self, vidSource, frameGap=0):
+		self.vidcap = cv2.VideoCapture(vidSource)
+		self.cascade = cv2.CascadeClassifier("face_cascade2.xml")
 		self.visibleFaceList = []		# contains all Face objects within the frame
 		self.notVisibleFaceList = []
 		self.totalFaceCount = 0		    # number of total faces seen so far
@@ -100,6 +104,7 @@ class Video:
 		# PERHAPS SUBCLASS?
 		self.frameImage = None          # this is whatever kind of image returned by openCV
 		# SOME SORT OF VIDEO OBJECT
+		cv2.namedWindow("show")
 
 
 	def addNewFace(self):
@@ -108,14 +113,16 @@ class Video:
 
 	def readFrame(self):
 		"""read frame from openCV info"""
-		pass
+		success, self.frameImage = self.vidcap.read()
+		return success, self.frameImage
 
 	def detectAll(self):
 		"""Run face detection algorithm on the whole picture and make adjustments 
 		to the faces based on where the are and where they should be
 
 		Should be run once every frameGap frames"""
-		pass
+		rects = self.cascade.detectMultiScale(self.frameImage, 1.3, 4, cv2.cv.CV_HAAR_SCALE_IMAGE, (20,20))
+		return rects
 
 	def estimateAll(self):
 		"""Step forward one frame, update all (visible?) faces based on estimation 
@@ -134,4 +141,11 @@ class Video:
 
 	def display(self):
 		""" Displays current frame, as well as objects associated with faces"""
-		pass
+		cv2.imshow("show", self.frameImage)
+
+	def showRectangle(self, pos):
+		cv2.rectangle(self.frameImage, pos[0], pos[1], (127, 255, 0), 2)
+		
+	def endWindow(self):
+		self.vidcap.release()
+		cv2.destroyWindow("show")
