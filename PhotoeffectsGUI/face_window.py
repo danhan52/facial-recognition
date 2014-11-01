@@ -11,7 +11,6 @@ import os
 
 class ImageBox(QWidget):
     def __init__(self):
-        #super(Example, self).__init__()
         QWidget.__init__(self)
         self.draw()
 
@@ -157,10 +156,7 @@ class DrawOptions(QWidget):
 
 class ControlBox(QWidget):
     def __init__(self):
-        #super(Example, self).__init__()
         QWidget.__init__(self)
-
-        # self.minimumSizeHint = QSize(300, 800)
 
         self.setSizePolicy (
             QSizePolicy (
@@ -189,9 +185,6 @@ class ControlBox(QWidget):
         winWidth  = self.size().width()
 
         painter.setPen(Qt.black)
-        # rect = QRectF(10, 10, winHeight - 20, winWidth - 20)
-        # painter.drawLine(QPoint(i * widthStep, 0), QPoint(i * widthStep, winHeight))
-        # painter.drawLine(QPoint(0, heightStep * i), QPoint(winWidth, heightStep * i))
         painter.drawRect(0, 0, winWidth, winHeight)
 
         painter.end()
@@ -200,7 +193,6 @@ class ControlBox(QWidget):
 class GuiWindow(QWidget):
 
     def __init__(self):
-        #super(Example, self).__init__()
         QWidget.__init__(self)
         self.make_shit()
 
