@@ -18,16 +18,14 @@ class ImageBox(QWidget):
 
         grid2 = QGridLayout()
 
-        pixmap = QPixmap("/Users/dunlin346/Desktop/tumblr_nceekzJ7Tz1r64huio6_r1_250.gif")
+        pixmap = QPixmap("tree1.jpg")
         piclabel = QLabel()
         piclabel.setPixmap(pixmap)
 
         piclabel.setScaledContents(True)
         width = pixmap.size().width()
         height = pixmap.size().height()
-        print width, height
         relationship = float(width)/height
-        print relationship
         piclabel.setMaximumSize(relationship*300, 300)
         piclabel.setMinimumSize(relationship*300, 300)
         grid2.addWidget(piclabel,0,0,1,3)
@@ -102,9 +100,7 @@ class FaceOptions(QWidget):
             piclabel.setScaledContents(True)
             width = pixmap.size().width()
             height = pixmap.size().height()
-            print width, height
             relationship = float(width)/height
-            print relationship
             piclabel.setMaximumSize(relationship*60, 60)
             piclabel.setMinimumSize(relationship*60, 60)
             grid.addWidget(piclabel, 2 + 2*(count/3),count % 3)
@@ -144,8 +140,6 @@ class DrawOptions(QWidget):
         widthStep = winWidth / 4
 
         myQPainter.setPen(Qt.black)
-        print winHeight
-        print winWidth
         for i in range(8):
             myQPainter.drawLine(QPoint(i * widthStep, 0), QPoint(i * widthStep, winHeight))
             myQPainter.drawLine(QPoint(0,heightStep * i), QPoint(winWidth,heightStep * i))
