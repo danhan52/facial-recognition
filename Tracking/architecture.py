@@ -8,7 +8,7 @@ class Face:
 		# MAYBE BOUNDING BOX?
 		self.position = []		# where the face is in the frame
 		self.prevPositions = []		# all previous positions
-		self.velocity = (0,0,0)		# vector describing x change, y change, and time change
+		self.velocity = ()		# vector describing x change, y change, and time change
 		self.orientation = 0		# the tilt of the head (degrees)
 		self.timeSinceDetection = 0	# frames since last detection
 		self.obscured = False		# whether the head was detected in the last detection
@@ -77,9 +77,9 @@ class Face:
 			time = self.position[2] - self.prevPositions[len(self.prevPositions)-1][2]
 			xdist = self.position[0][0] - self.prevPositions[len(self.prevPositions)-1][0][0]
 			ydist = self.position[0][1] - self.prevPositions[len(self.prevPositions)-1][0][1]
-			#self.velocity = math.pow(math.pow(1.0*xdist,2) + math.pow(1.0*ydist,2),0.5) / (1.0*time.total_seconds())
 			self.velocity = (xdist,ydist,time.total_seconds())
-
+			#self.velocity = math.pow(math.pow(1.0*xdist,2) + math.pow(1.0*ydist,2),0.5) / (1.0*time.total_seconds())
+			
 	def getVelocity(self):
 		return self.velocity
 
@@ -224,12 +224,16 @@ class Video:
 		# 	face.estimateNextPosition()
 
 
-	def step(self):
+	def findFaces(self):
 		"""Calls either detectAll() or estimateAll() to update position of faces
 		based on frameCount and frameGap
-
 		Also increments frameCount"""
-		pass
+		rects = self.detectAll()
+		if len(rects)==0:
+			rects = []
+		else:
+			rects[:, 2:] += rects[:, :2]
+		self.analyzeFrame(rects)
 
 	def display(self):
 		""" Displays current frame, as well as objects associated with faces"""
