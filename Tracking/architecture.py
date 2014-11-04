@@ -14,6 +14,7 @@ class Face:
 		self.obscured = False		# whether the head was detected in the last detection
 		self.colorAvg = 0			# average pixel intensity of facial region
 		self.usingFeatures = useFeatures
+		self.id = 0
 		
 		# list of mini-images that are attached to the face
 		# (each entry contains info about what the image is, where it is, size, etc.)
@@ -126,21 +127,32 @@ class Video:
 				megaList.append(list(tempList))
 
 			assignmentList = []
-			while len(assignmentList) < len(self.visibleFaceList):
-				highestVal = 0
-				highestIndex = ()
-				for i in range(len(megaList)):
-					for j in range(len(megaList[i])):
-						if j not in assignmentList:
-							if megaList[i][j] >= highestVal:
-								highestVal = megaList[i][j]
-								highestIndex = (i, j)
-				assignmentList.append(j)
+			for i in range(len(megaList)):
+				highest = 0
+				index = 0
+				for j in range(len(megaList[i])):
+					if megaList[i][j] >= highest:
+						index = j
+						highest = megaList[i][j]
+				assignmentList.append(index)
+
+			# while len(assignmentList) < len(self.visibleFaceList):
+			# 	highestVal = 0
+			# 	highestIndex = ()
+			# 	for i in range(len(megaList)):
+			# 		for j in range(len(megaList[i])):
+			# 			if j not in assignmentList:
+			# 				if megaList[i][j] >= highestVal:
+			# 					highestVal = megaList[i][j]
+			# 					highestIndex = (i, j)
+			# 	assignmentList.append(j)
 			self.makeAssignments(assignmentList, rects)
 
 			for i in range(len(rects)):
 				if i not in assignmentList:
 					fc = Face()
+					fc.id = self.totalFaceCount
+					self.totalFaceCount += 1
 					fc.setPosition(rects[i])
 					self.visibleFaceList.append(fc)
 
@@ -155,22 +167,68 @@ class Video:
 				megaList.append(list(tempList))
 
 			assignmentList = []
-			while len(assignmentList) < len(rects):
-				highestVal = 0
-				highestIndex = ()
-				for i in range(len(megaList)):
-					for j in range(len(megaList[i])):
-						if j not in assignmentList:
-							if megaList[i][j] >= highestVal:
-								highestVal = megaList[i][j]
-								highestIndex = (i, j)
-				assignmentList.append(j)
+			for i in range(len(megaList)):
+				highest = 0
+				index = 0
+				for j in range(len(megaList[i])):
+					if megaList[i][j] >= highest:
+						index = j
+						highest = megaList[i][j]
+				assignmentList.append(index)
+			# print assignmentList
+
+			# assignmentList = [-1]*len(self.visibleFaceList)
+			# while (-1 in assignmentList):
+			# 	print assignmentList
+			# 	highestVal = 0
+			# 	highestIndex = -1		# maybe change initial value
+			# 	for i in range(len(megaList)):
+			# 		if assignmentList[i] == -1:
+			# 			for j in range(len(megaList[i])):
+			# 				if j not in assignmentList:
+			# 					if megaList[i][j] >= highestVal:
+			# 						highestVal = megaList[i][j]
+			# 						highestIndex = j
+			# 	if highestIndex != -1:
+			# 		assignmentList[i] = highestIndex
+			# 	else:
+			# 		print "error"
+			# 	highestVal = 0
+			# 	highestIndex = -1
+			# print assignmentList
 			self.makeAssignments(assignmentList, rects)
 
-		else:		# more rects than faces
-			pass
+		else:
+			# more rects than faces
+			megaList = []
+			for i in range(len(self.visibleFaceList)):
+				tempList = []
+				for j in range(len(rects)):
+					tempList.append(self.likelihoodOfBeingHere(self.visibleFaceList[i],rects[j]))
+				# if there are issues, it's with copying
+				megaList.append(list(tempList))
+
+			assignmentList = []
+			probabilityList = []
+			for i in range(len(megaList)):
+				highest = 0
+				index = 0
+				for j in range(len(megaList[i])):
+					if megaList[i][j] >= highest:
+						index = j
+						highest = megaList[i][j]
+				assignmentList.append(index)
+				probabilityList.append(highest)
+
+			lowIndex = probabilityList.index(min(probabilityList))
+			self.notVisibleFaceList.append(self.visibleFaceList.pop(lowIndex))
+			assignmentList.pop(lowIndex)
+			self.makeAssignments(assignmentList, rects)
+
+
 
 	def makeAssignments(self, assignmentList, rects):
+		print len(self.visibleFaceList)
 		for i in range(len(self.visibleFaceList)):
 			self.visibleFaceList[i].setPosition(rects[assignmentList[i]])
 
@@ -187,14 +245,17 @@ class Video:
 		recentPosition = face1.getPosition()
 		if not (recentPosition==[]):
 			deltaTime = (time - recentPosition[2]).total_seconds()
-			# eventually depend on size of face, for now straight up linear
 			size = math.pow(face1.getSize(),0.5)
 			radius = deltaTime*size
 			middleOfRect = ((rect[2]+rect[0])/2,(rect[3]+rect[1])/2)
 			middleOfFace = ((recentPosition[1][0]+recentPosition[0][0])/2,(recentPosition[1][1]+recentPosition[0][1])/2)
 			diffMiddles = math.pow(math.pow(middleOfFace[0]-middleOfRect[0], 2) + math.pow(middleOfFace[1]-middleOfRect[1], 2), 0.5)
-			prob = 1-(diffMiddles/radius)
+			# asymptote equation such that after the difference in middles is more than 1 radius away,
+			# prob will be down to 0.25 but after that it slowly goes to 0 never quite reaching it
+			x = math.pow(diffMiddles/radius,2)
+			prob = 1/(3*x+1)
 			if prob > 0:
+				# print "prob = ", prob
 				return prob
 			else:
 				return 0
@@ -225,9 +286,8 @@ class Video:
 
 
 	def findFaces(self):
-		"""Calls either detectAll() or estimateAll() to update position of faces
-		based on frameCount and frameGap
-		Also increments frameCount"""
+		"""detects all faces with the frame then analyzes the frame to determine
+		which face belongs to which face object"""
 		rects = self.detectAll()
 		if len(rects)==0:
 			rects = []
@@ -237,14 +297,16 @@ class Video:
 
 	def display(self):
 		""" Displays current frame, as well as objects associated with faces"""
-		print len(self.visibleFaceList)
+		# print len(self.visibleFaceList)
 		for i in range(len(self.visibleFaceList)):
-			self.showRectangle(self.visibleFaceList[i].getPosition(),self.colors[i])
+			self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].id)
 			cv2.imshow("show", self.frameImage)
 
-	def showRectangle(self, pos, color):
-		cv2.rectangle(self.frameImage, pos[0], pos[1], color, 2)
+	def showRectangle(self, pos, IDnum):
+		cv2.rectangle(self.frameImage, pos[0], pos[1], (255,0,0), 2)
+		cv2.putText(self.frameImage, str(IDnum), pos[0], cv2.FONT_HERSHEY_SIMPLEX, 1, [0,0,0])
 		
 	def endWindow(self):
+		"""stops using webcam (or whatever source is) and removes display window"""
 		self.vidcap.release()
 		cv2.destroyWindow("show")

@@ -9,6 +9,7 @@ def goGetEm():
 		vid.readFrame()
 		vid.findFaces()
 		vid.display()
+		# exit on escape key
 		key = cv2.waitKey(20)
 		if key == 27:
 			break
