@@ -1,6 +1,6 @@
 import cv2
 import os
-from architecture import Video
+from video import Video
 
 def goGetEm():
 	vid = Video(0)
