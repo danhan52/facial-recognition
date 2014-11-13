@@ -20,6 +20,12 @@ class Video:
 		cv2.namedWindow("show")
 
 
+	def getFaces(self):
+		return self.visibleFaceList
+
+	def getCurrentFrame(self):
+		return self.frameImage
+
 	def pruneFaceList(self):
 		# for i in range(len(self.notVisibleFaceList)):
 		i = 0
@@ -32,16 +38,20 @@ class Video:
 				self.inactiveFaceList.append(self.notVisibleFaceList.pop(i))
 			i += 1
 
+	def listHelper(self, listChoice, rects):
+		megaList = []
+		for i in range(len(listChoice)):
+			tempList = []
+			for j in range(len(rects)):
+				tempList.append(self.scoreForBeingHere(listChoice[i],rects[j]))
+			# if there are issues, it's with copying
+			megaList.append(list(tempList))
+		return megaList
+
 	def analyzeFrame(self,rects):
 		self.pruneFaceList()
 		if len(rects)>len(self.visibleFaceList):
-			megaList = []
-			for i in range(len(self.visibleFaceList)):
-				tempList = []
-				for j in range(len(rects)):
-					tempList.append(self.scoreForBeingHere(self.visibleFaceList[i],rects[j]))
-				# if there are issues, it's with copying
-				megaList.append(list(tempList))
+			megaList = self.listHelper(self.visibleFaceList,rects)
 
 			assignmentList = []
 			for i in range(len(megaList)):
@@ -55,15 +65,8 @@ class Video:
 
 			self.makeAssignments(assignmentList, rects)
 
-			notList = []
-			for i in range(len(self.notVisibleFaceList)):
-				tempList = []
-				for j in range(len(rects)):
-					tempList.append(self.scoreForBeingHere(self.notVisibleFaceList[i],rects[j]))
-				# if there are issues, it's with copying
-				notList.append(list(tempList))
-			# print notList
-			tempValue = 0.8
+			notList = self.listHelper(self.notVisibleFaceList,rects)
+			minScore = 0.1
 
 			if notList != []:
 				for i in range(len(rects)):
@@ -75,13 +78,14 @@ class Video:
 							if notList[j][i] > highest:
 								index = j
 								highest = notList[j][i]
-						if notList[index][i] > tempValue:
-							face = self.notVisibleFaceList.pop(j)
+						if notList[index][i] > minScore:
+							face = self.notVisibleFaceList.pop(index)
 							face.setPosition(rects[i])
 							self.visibleFaceList.append(face)
 						else:
 							fc = Face()
 							fc.id = self.totalFaceCount
+							# print fc.id
 							self.totalFaceCount += 1
 							fc.setPosition(rects[i])
 							self.visibleFaceList.append(fc)
@@ -89,19 +93,14 @@ class Video:
 				for i in range(len(rects)):
 					fc = Face()
 					fc.id = self.totalFaceCount
+					# print fc.id
 					self.totalFaceCount += 1
 					fc.setPosition(rects[i])
-				self.visibleFaceList.append(fc)
+					self.visibleFaceList.append(fc)
 
 
 		elif len(rects)==len(self.visibleFaceList):
-			megaList = []
-			for i in range(len(self.visibleFaceList)):
-				tempList = []
-				for j in range(len(rects)):
-					tempList.append(self.scoreForBeingHere(self.visibleFaceList[i],rects[j]))
-				# if there are issues, it's with copying
-				megaList.append(list(tempList))
+			megaList = self.listHelper(self.visibleFaceList,rects)
 
 			assignmentList = []
 			for i in range(len(megaList)):
@@ -117,13 +116,7 @@ class Video:
 
 		else:
 			# less rects than faces
-			megaList = []
-			for i in range(len(self.visibleFaceList)):
-				tempList = []
-				for j in range(len(rects)):
-					tempList.append(self.scoreForBeingHere(self.visibleFaceList[i],rects[j]))
-				# if there are issues, it's with copying
-				megaList.append(list(tempList))
+			megaList = self.listHelper(self.visibleFaceList,rects)
 
 			assignmentList = []
 			probabilityList = []
@@ -173,8 +166,10 @@ class Video:
 			# asymptote equation such that after the difference in middles is more than 1 radius away,
 			# prob will be down to 0.25 but after that it slowly goes to 0 never quite reaching it
 			x = math.pow(diffMiddles/radius,3)
-			prob = 1/(3*x+1)
-			return prob
+			# decays with increase in time
+			constant = 1
+			score = 1/(constant*deltaTime*(3*x+1))
+			return score
 		else:
 			return 0
 
@@ -192,13 +187,14 @@ class Video:
 		return rects
 
 
-	def estimateAll(self):
-		"""Step forward one frame, update all (visible?) faces based on estimation 
-		from velocities; don't run face detection algorithm
-		Should be run every frame except where detectAll() is run."""
-		pass
-		# for face in self.visibleFaceList[]:
-		# 	face.estimateNextPosition()
+	# # won't really ever use
+	# def estimateAll(self):
+	# 	"""Step forward one frame, update all (visible?) faces based on estimation 
+	# 	from velocities; don't run face detection algorithm
+	# 	Should be run every frame except where detectAll() is run."""
+	# 	pass
+	# 	# for face in self.visibleFaceList[]:
+	# 	# 	face.estimateNextPosition()
 
 
 	def findFaces(self):
@@ -215,7 +211,12 @@ class Video:
 	def display(self):
 		""" Displays current frame, as well as objects associated with faces"""
 		# print len(self.visibleFaceList)
+		print "not visible: "
+		for face in self.notVisibleFaceList:
+			print face.id
+		print "visibel: "
 		for i in range(len(self.visibleFaceList)):
+			print self.visibleFaceList[i].id
 			self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].id)
 		cv2.imshow("show", self.frameImage)
 
