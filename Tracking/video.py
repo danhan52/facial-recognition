@@ -5,19 +5,40 @@ import os
 from face import Face
 
 class Video:
-	def __init__(self, vidSource, frameGap=0):
+	def __init__(self, vidSource, variableList=[]):
 		self.vidcap = cv2.VideoCapture(vidSource)
 		self.cascade = cv2.CascadeClassifier("face_cascade2.xml")
 		self.visibleFaceList = []		# contains all Face objects within the frame
 		self.notVisibleFaceList = []
 		self.inactiveFaceList = []
 		self.totalFaceCount = 0		    # number of total faces seen so far
-		self.frameGap = frameGap		# number of frames skipped before detection algorithm is run again
 		self.frameCount = 0			    # counter to determine when to detect
 		# PERHAPS SUBCLASS?
 		self.frameImage = None          # this is whatever kind of image returned by openCV
-		self.timeOut = 15
+
 		cv2.namedWindow("show")
+		#####TWEAKABLE VARIABLES#####
+		if variableList == []:
+			# Always between 0 and 1
+			self.velocityWeight = 0
+			self.scoreWeight = 1
+			self.minRemovalScore = 0.1
+			# Maybe larger than one
+			self.radiusSize = 0.5
+			# Probably always larger than one
+			self.timeOut = 15
+			self.frameGap = 0
+		# add a catch statement for if variable list isn't of length 6
+		else:
+			# Always between 0 and 1
+			self.velocityWeight = variableList[0]
+			self.scoreWeight = variableList[1]
+			self.minRemovalScore = variableList[2]
+			# Maybe larger than one
+			self.radiusSize = variableList[3]
+			# Probably always larger than one
+			self.timeOut = variableList[4]
+			self.frameGap = variableList[5]
 
 
 	def getFaces(self):
@@ -66,7 +87,6 @@ class Video:
 			self.makeAssignments(assignmentList, rects)
 
 			notList = self.listHelper(self.notVisibleFaceList,rects)
-			minScore = 0.1
 
 			if notList != []:
 				for i in range(len(rects)):
@@ -78,7 +98,7 @@ class Video:
 							if notList[j][i] > highest:
 								index = j
 								highest = notList[j][i]
-						if notList[index][i] > minScore:
+						if notList[index][i] > self.minRemovalScore:
 							face = self.notVisibleFaceList.pop(index)
 							face.setPosition(rects[i])
 							self.visibleFaceList.append(face)
@@ -158,17 +178,22 @@ class Video:
 		recentPosition = face1.getPosition()
 		if not (recentPosition==[]):
 			deltaTime = (time - recentPosition[2]).total_seconds()
+			velocity = face1.getVelocity()
 			area = math.pow(face1.getArea(),0.5)
-			radius = deltaTime*area/2
+			radius = deltaTime*area*self.radiusSize
 			middleOfRect = ((rect[2]+rect[0])/2,(rect[3]+rect[1])/2)
 			middleOfFace = ((recentPosition[1][0]+recentPosition[0][0])/2,(recentPosition[1][1]+recentPosition[0][1])/2)
+			if velocity != 0:
+				middleOfFace = (middleOfFace[0] + velocity[0]/velocity[2]*deltaTime*self.velocityWeight, middleOfFace[1] + velocity[1]/velocity[2]*deltaTime*self.velocityWeight)
 			diffMiddles = math.pow(math.pow(middleOfFace[0]-middleOfRect[0], 2) + math.pow(middleOfFace[1]-middleOfRect[1], 2), 0.5)
+			
+
 			# asymptote equation such that after the difference in middles is more than 1 radius away,
 			# prob will be down to 0.25 but after that it slowly goes to 0 never quite reaching it
 			x = math.pow(diffMiddles/radius,3)
 			# decays with increase in time
 			constant = 1
-			score = 1/(constant*deltaTime*(3*x+1))
+			score = self.scoreWeight/(deltaTime*(3*x+1))
 			return score
 		else:
 			return 0

@@ -3,10 +3,10 @@ import os
 from video import Video
 
 def goGetEm():
-	vid = Video("facepic3.jpg")
-	isVid = False
-	# vid = Video(0)
-	# isVid = True
+	# vid = Video("facepic3.jpg")
+	# isVid = False
+	vid = Video(0)
+	isVid = True
 	# vid.readFrame()
 	if isVid==True:
 		while (True):

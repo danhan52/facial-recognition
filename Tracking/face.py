@@ -68,7 +68,7 @@ class Face:
 		self.position[0]
 		pass
 
-	def calculateVelocity(self):
+	def getVelocity(self):
 		"""Use last detected position and most recent detected position
 		to estimate how fast the face is moving"""
 		if len(self.prevPositions) < 2:
@@ -78,10 +78,8 @@ class Face:
 			xdist = self.position[0][0] - self.prevPositions[len(self.prevPositions)-1][0][0]
 			ydist = self.position[0][1] - self.prevPositions[len(self.prevPositions)-1][0][1]
 			self.velocity = (xdist,ydist,time.total_seconds())
-			#speed = math.pow(math.pow(1.0*xdist,2) + math.pow(1.0*ydist,2),0.5) / (1.0*time.total_seconds())
-			
-	def getVelocity(self):
 		return self.velocity
+			#speed = math.pow(math.pow(1.0*xdist,2) + math.pow(1.0*ydist,2),0.5) / (1.0*time.total_seconds())
 
 	def update(self, pos):
 		"""calls most of the above methods to give a complete and new
