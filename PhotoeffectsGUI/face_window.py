@@ -13,7 +13,7 @@ sys.path.append("/Accounts/collierk/COMPS/facial-recognition/Tracking")
 import architecture
 from architecture import *
 import cv2
-from PIL import Image
+#from PIL import Image
 
 
 class PictureButton(QPushButton):
@@ -253,9 +253,34 @@ class ImageBox(QWidget):
                 amount_to_go_down = 0
                 painter.drawPixmap(rect[0], rect[1] + amount_to_go_down, overlay_copy)
             elif icon_name == "blurry.jpg":
-                overlay_copy = overlay_copy.scaledToWidth(width*1.5)
-                amount_to_go_down = -height/3.0
-                painter.drawPixmap(rect[0]-width/4.0, rect[1] + amount_to_go_down, overlay_copy)
+                face_image = base.copy(rect[0]+5, rect[1]-10, width-10, height+20).toImage()
+                blurred_image = face_image.copy()
+                b_a = width/12
+                cur = QColor.fromRgb(blurred_image.pixel(b_a/2, b_a/2))
+                for y in range(b_a, face_image.height() - b_a):
+                    for x in range(b_a, face_image.width() - b_a):
+                        if (x+ b_a/2)%b_a == 0 or (y+ b_a/2)%b_a == 0:
+                            cur = QColor.fromRgb(blurred_image.pixel(x, y))
+                        else: 
+                            blurred_image.setPixel(x, y, qRgb(cur.red(), cur.green(), cur.blue()))
+                           #set pixel to cur 
+                        #avg = [0.0, 0.0, 0.0]
+                        #count = 0
+                        #for i in range(-8, 8):
+                         #   for j in range(-8, 8):
+                          #      color = QColor.fromRgb(blurred_image.pixel(x + i, y + j))
+                           #     avg[0] += color.red()
+                            #    avg[1] += color.green()
+                             #   avg[2] += color.blue()
+                              #  count += 1
+                        
+                
+                #"pull just the face from the image"
+                
+                
+                
+                blurred_pixmap = QPixmap.fromImage(blurred_image)
+                painter.drawPixmap(rect[0], rect[1], blurred_pixmap)
             else:
                 print "Not implemeneted yet"
         
