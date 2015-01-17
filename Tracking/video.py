@@ -5,7 +5,7 @@ import os
 from face import Face
 
 class Video:
-	def __init__(self, vidSource, variableList=[]):
+	def __init__(self, vidSource, variableList=[], showWindow=True):
 		self.vidcap = cv2.VideoCapture(vidSource)
 		self.cascade = cv2.CascadeClassifier("face_cascade2.xml")
 		self.visibleFaceList = []		# contains all Face objects within the frame
@@ -15,8 +15,10 @@ class Video:
 		self.frameCount = 0			    # counter to determine when to detect
 		# PERHAPS SUBCLASS?
 		self.frameImage = None          # this is whatever kind of image returned by openCV
+		self.showWindow = showWindow
 
-		cv2.namedWindow("show")
+		if self.showWindow:
+			cv2.namedWindow("show")
 		#####TWEAKABLE VARIABLES#####
 		if variableList == []:
 			# Always between 0 and 1
@@ -234,7 +236,7 @@ class Video:
 
 
 	def display(self):
-		""" Displays current frame, as well as objects associated with faces"""
+		""" Displays current frame with rectangles and boxes"""
 		# print len(self.visibleFaceList)
 		print "not visible: "
 		for face in self.notVisibleFaceList:

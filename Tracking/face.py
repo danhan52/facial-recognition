@@ -82,13 +82,25 @@ class Face:
 			#speed = math.pow(math.pow(1.0*xdist,2) + math.pow(1.0*ydist,2),0.5) / (1.0*time.total_seconds())
 
 	def update(self, pos):
-		"""calls most of the above methods to give a complete and new
+		"""Calls most of the above methods to give a complete and new
 		representation of the face based on information passed in from the Video
 
 		Also updates features if those are being used"""
 		pass
 
 	def findFeatures(self):
-		"""find the facial features using a detection algorithm that
+		"""Find the facial features using a detection algorithm that
 		is limited to the facial area"""
 		pass
+
+	def addAttachedObject(self, attachedObject):
+		"""Adds an object or photo effect (silly hat, blur, ...) to the face."""
+		self.attachedObjects.append(attachedObject)
+
+	def removeAttachedObject(self, attachedObject):
+		"""Removes an object/effect from the face."""
+		self.attachedObjects.remove(attachedObject)
+
+	def getAttachedObjects(self):
+		"""Returns a list of objects and/or effects that are associated with this face."""
+		return self.attachedObjects
