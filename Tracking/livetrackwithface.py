@@ -2,10 +2,21 @@ import cv2
 import os
 from video import Video
 
+			# # Always between 0 and 1
+			# self.velocityWeight = variableList[0]
+			# self.scoreWeight = variableList[1]
+			# self.minRemovalScore = variableList[2]
+			# # Maybe larger than one
+			# self.radiusSize = variableList[3]
+			# # Probably always larger than one
+			# self.timeOut = variableList[4]
+			# self.frameGap = variableList[5]
+
 def goGetEm():
 	# vid = Video("facepic3.jpg")
 	# isVid = False
-	vid = Video(0)
+	#vid = Video("Slightmovement.MP4", [0,1,0.1,0.1,1000,0])
+	vid = Video(0, [0,1,0.1,0.1,1000,0])
 	isVid = True
 	# vid.readFrame()
 	if isVid==True:
@@ -13,6 +24,7 @@ def goGetEm():
 			vid.readFrame()
 			vid.findFaces()
 			vid.display()
+			vid.clean()
 			# exit on escape key
 			key = cv2.waitKey(20)
 			if key == 27:

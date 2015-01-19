@@ -247,6 +247,11 @@ class Video:
 			self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].id)
 		cv2.imshow("show", self.frameImage)
 
+	def clean(self):
+		for i in range(len(self.notVisibleFaceList)):
+			if len(self.notVisibleFaceList[i].prevPositions) < 5:
+				self.notVisibleFaceList.pop(i)
+
 
 	def showRectangle(self, pos, IDnum):
 		cv2.rectangle(self.frameImage, pos[0], pos[1], (255,0,0), 2)
