@@ -13,6 +13,7 @@ class Video:
 		self.inactiveFaceList = []
 		self.totalFaceCount = 0		    # number of total faces seen so far
 		self.frameCount = 0			    # counter to determine when to detect
+		self.cleanThresh = 0
 		# PERHAPS SUBCLASS?
 		self.frameImage = None          # this is whatever kind of image returned by openCV
 		self.showWindow = showWindow
@@ -30,6 +31,8 @@ class Video:
 			# Probably always larger than one
 			self.timeOut = 15
 			self.frameGap = 0
+			self.cleanThresh = 5
+			self.usingTime = True
 		# add a catch statement for if variable list isn't of length 6
 		else:
 			# Always between 0 and 1
@@ -41,6 +44,8 @@ class Video:
 			# Probably always larger than one
 			self.timeOut = variableList[4]
 			self.frameGap = variableList[5]
+			self.cleanThresh = variableList[6]
+			self.usingTime = variableList[7]
 
 
 	def getFaces(self):
@@ -71,17 +76,34 @@ class Video:
 			megaList.append(list(tempList))
 		return megaList
 
+	# def dualListHelper(self, list1, list2, rects):
+	# 	megaList = []
+	# 	for i in range(len(list1)):
+	# 		tempList = []
+	# 		for j in range(len(rects)):
+	# 			tempList.append(self.scoreForBeingHere(list1[i],rects[j]))
+	# 		# if there are issues, it's with copying
+	# 		megaList.append(list(tempList))
+	# 	for i in range(len(list2)):
+	# 		tempList = []
+	# 		for j in range(len(rects)):
+	# 			tempList.append(self.scoreForBeingHere(list2[i],rects[j]))
+	# 		# if there are issues, it's with copying
+	# 		megaList.append(list(tempList))
+	# 	return megaList
+
+
 	def analyzeFrame(self,rects):
 		self.pruneFaceList()
 		if len(rects)>len(self.visibleFaceList):
 			megaList = self.listHelper(self.visibleFaceList,rects)
-
+			# print megaList
 			assignmentList = []
 			for i in range(len(megaList)):
 				highest = 0
 				index = 0
 				for j in range(len(megaList[i])):
-					if megaList[i][j] >= highest:
+					if megaList[i][j] >= highest and j not in assignmentList:
 						index = j
 						highest = megaList[i][j]
 				assignmentList.append(index)
@@ -123,13 +145,13 @@ class Video:
 
 		elif len(rects)==len(self.visibleFaceList):
 			megaList = self.listHelper(self.visibleFaceList,rects)
-
+			# print megaList
 			assignmentList = []
 			for i in range(len(megaList)):
 				highest = 0
 				index = 0
 				for j in range(len(megaList[i])):
-					if megaList[i][j] >= highest:
+					if megaList[i][j] >= highest and j not in assignmentList:
 						index = j
 						highest = megaList[i][j]
 				assignmentList.append(index)
@@ -139,14 +161,14 @@ class Video:
 		else:
 			# less rects than faces
 			megaList = self.listHelper(self.visibleFaceList,rects)
-
+			# print megaList
 			assignmentList = []
 			probabilityList = []
 			for i in range(len(megaList)):
 				highest = 0
 				index = 0
 				for j in range(len(megaList[i])):
-					if megaList[i][j] >= highest:
+					if megaList[i][j] >= highest and j not in assignmentList:
 						index = j
 						highest = megaList[i][j]
 				assignmentList.append(index)
@@ -182,7 +204,10 @@ class Video:
 			deltaTime = (time - recentPosition[2]).total_seconds()
 			velocity = face1.getVelocity()
 			area = math.pow(face1.getArea(),0.5)
-			radius = deltaTime*area*self.radiusSize
+			if self.usingTime:
+				radius = deltaTime*area*self.radiusSize
+			else:
+				radius = area*self.radiusSize
 			middleOfRect = ((rect[2]+rect[0])/2,(rect[3]+rect[1])/2)
 			middleOfFace = ((recentPosition[1][0]+recentPosition[0][0])/2,(recentPosition[1][1]+recentPosition[0][1])/2)
 			if velocity != 0:
@@ -194,8 +219,10 @@ class Video:
 			# prob will be down to 0.25 but after that it slowly goes to 0 never quite reaching it
 			x = math.pow(diffMiddles/radius,3)
 			# decays with increase in time
-			constant = 1
-			score = self.scoreWeight/(deltaTime*(3*x+1))
+			if self.usingTime:
+				score = self.scoreWeight/(deltaTime*(3*x+1))
+			else:
+				score = self.scoreWeight/((3*x+1))
 			return score
 		else:
 			return 0
@@ -238,19 +265,20 @@ class Video:
 	def display(self):
 		""" Displays current frame with rectangles and boxes"""
 		# print len(self.visibleFaceList)
-		print "not visible: "
-		for face in self.notVisibleFaceList:
-			print face.id
-		print "visibel: "
+		# print "not visible: "
+		# for face in self.notVisibleFaceList:
+			# print face.id
+		# print "visibel: "
 		for i in range(len(self.visibleFaceList)):
-			print self.visibleFaceList[i].id
+			# print self.visibleFaceList[i].id
 			self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].id)
 		cv2.imshow("show", self.frameImage)
 
 	def clean(self):
 		for i in range(len(self.notVisibleFaceList)):
-			if len(self.notVisibleFaceList[i].prevPositions) < 5:
+			if len(self.notVisibleFaceList[i].prevPositions) < self.cleanThresh:
 				self.notVisibleFaceList.pop(i)
+				self.totalFaceCount -= 1
 
 
 	def showRectangle(self, pos, IDnum):

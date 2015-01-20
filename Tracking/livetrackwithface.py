@@ -11,12 +11,14 @@ from video import Video
 			# # Probably always larger than one
 			# self.timeOut = variableList[4]
 			# self.frameGap = variableList[5]
+			# self.cleanThresh = variableList[6]
+			# self.usingTime = variableList[7]
 
 def goGetEm():
 	# vid = Video("facepic3.jpg")
 	# isVid = False
 	#vid = Video("Slightmovement.MP4", [0,1,0.1,0.1,1000,0])
-	vid = Video(0, [0,1,0.1,0.1,1000,0])
+	vid = Video(0, [0,1,1,0.5,1000,0, 20, False])
 	isVid = True
 	# vid.readFrame()
 	if isVid==True:
