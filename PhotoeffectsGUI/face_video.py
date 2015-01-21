@@ -8,10 +8,11 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 import os
 # Change for particular machine
-sys.path.append("/Users/Katja/COMPS/facial-recognition/Tracking")
+#sys.path.append("/Users/Katja/COMPS/facial-recognition/Tracking")
 sys.path.append("/Accounts/collierk/COMPS/facial-recognition/Tracking")
-import architecture
-from architecture import *
+#import architecture
+#from architecture import *
+from video import Video
 import cv2, cv
 import time
 #from PIL import Image
@@ -318,39 +319,53 @@ class GuiWindow(QWidget):
         
         self.leftbox = ImageBox()
         grid.addWidget(self.leftbox,0,0)
+        #goGetEm()
         
         
-        cap = cv2.VideoCapture(0)
+        #cap = cv2.VideoCapture(0)
+        vid = Video(0)
         
         while(True):
-            #time.sleep(.03)
-            ret, frame = cap.read()
-            # ... actually detect faces ...
-            cv2.cvtColor(frame, cv.CV_BGR2RGB, frame)
-            image = QImage(frame.tostring(),\
-                frame.shape[1],frame.shape[0],QImage.Format_RGB888)
-            pixmap = QPixmap.fromImage(image)
+            time.sleep(.1)
+            vid.readFrame()
             
-            #pixmap = QPixmap(frame.tostring(),\
-            #    frame.shape[1],frame.shape[0],QImage.Format_RGB888)
+            vid.findFaces()
+            time.sleep(.1)
+            frame = vid.getCurrentFrame()
+            print frame[100][100]
             
-            
-            
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-                
-            self.leftbox.set_image(pixmap)
-            self.setLayout(grid)
-            self.show()
+            time.sleep(.1)
+            print vid.getFaces()
+            time.sleep(.1)
+            cv2.imshow('frame',frame)
+            time.sleep(.1)
+            #print frame
+            #ret, frame = cap.read()    
+        
+#            cv2.cvtColor(frame, cv.CV_BGR2RGB, frame)
+#            image = QImage(frame.tostring(),\
+#                frame.shape[1],frame.shape[0],QImage.Format_RGB888)
+#            pixmap = QPixmap.fromImage(image)
+#            #time.sleep(1)
+#            #pixmap = QPixmap(frame.tostring(),\
+#            #    frame.shape[1],frame.shape[0],QImage.Format_RGB888)
+#            
+#            
+#            
+#            if cv2.waitKey(1) & 0xFF == ord('q'):
+#                break
+#                
+#            self.leftbox.set_image(pixmap)
+#            self.setLayout(grid)
+#            self.show()
+            #time.sleep(1)
             
             
         #self.setLayout(grid)
         #self.show()
+       
             
-        
-        
-        
-        
+    
 
     def add_option_clicked(self, button_name):
         '''When PictureButton is clicked, tells main image to redraw appropriately.'''
@@ -397,9 +412,13 @@ def goGetEm():
         while (True):
             vid.readFrame()
             vid.findFaces()
-            cur_frame = vid.getFrameImage()
-            cv2.imshow(JADFgakjshdfgjkhasdf, cur_frame)
-            
+            print vid.getFaces()
+            vid.display()
+            #print vid.getFaces()
+            # exit on escape key
+            key = cv2.waitKey(20)
+            if key == 27:
+                break
         vid.endWindow()
     else:
         vid.readFrame()
