@@ -18,7 +18,7 @@ def goGetEm():
 	# vid = Video("facepic3.jpg")
 	# isVid = False
 	#vid = Video("Slightmovement.MP4", [0,1,0.1,0.1,1000,0])
-	vid = Video(0, [0,1,1,0.5,1000,0, 20, False])
+	vid = Video(0, [0,1,0.01,0.5,1000,0, 20, True])
 	isVid = True
 	# vid.readFrame()
 	if isVid==True:
@@ -26,7 +26,7 @@ def goGetEm():
 			vid.readFrame()
 			vid.findFaces()
 			vid.display()
-			vid.clean()
+			# vid.clean()
 			# exit on escape key
 			key = cv2.waitKey(20)
 			if key == 27:

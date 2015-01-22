@@ -86,19 +86,83 @@ class Video:
 	def dualListHelper(self, list1, list2, rects):
 		megaList = []
 		breakPoint = 0
-		for i in range(len(rects)):
+		for i in range(len(list1)):
 			tempList = []
-			for j in range(len(list1)):
-				tempList.append(self.scoreForBeingHere(list1[j],rects[i]))
-				breakPoint = j
-			for k in range(len(list2)):
-				tempList.append(self.scoreForBeingHere(list2[k],rects[i]))
+			for j in range(len(rects)):
+				tempList.append(self.scoreForBeingHere(list1[i],rects[j]))
+			breakPoint = i
+			megaList.append(list(tempList))
+		for i in range(len(list2)):
+			tempList = []
+			for j in range(len(rects)):
+				tempList.append(self.scoreForBeingHere(list2[i],rects[j]))
 			# if there are issues, it's with copying
 			megaList.append(list(tempList))
 
-		return megaList, breakPoint		
+		return megaList, breakPoint
 
 	def analyzeFrame(self, rects):
+		self.pruneFaceList()
+		#Case 1
+		# if len(rects)>len(self.visibleFaceList):
+			# print "case1"
+		if len(self.visibleFaceList)>0:
+			megaList, breakPoint = self.dualListHelper(self.visibleFaceList, self.notVisibleFaceList, rects)
+			assignmentList = [-1]*(len(self.visibleFaceList)+len(self.notVisibleFaceList))
+			totalAssigned=0
+			visibleFaces = len(self.visibleFaceList)
+			totalFaces = len(self.visibleFaceList)+len(self.notVisibleFaceList)
+			indices = []
+
+			while totalAssigned < len(rects):
+				# print "WHILE"
+				# print len(rects)
+				index = 0
+				highest = 0
+				highFaceIndex = 0
+				for i in range(len(megaList)):
+					if assignmentList[i] == -1:
+						currentVal = max(megaList[i])
+						# print currentVal
+						currentIndex = megaList[i].index(currentVal)
+						# print currentIndex not in assignmentList
+						if currentVal > highest and currentIndex not in assignmentList and currentVal > self.minRemovalScore:
+							highest = currentVal
+							index = currentIndex
+							highFaceIndex = i
+				if highest != 0:
+					if highFaceIndex > breakPoint:
+
+						face = self.notVisibleFaceList.pop(highFaceIndex-breakPoint-1)
+						self.visibleFaceList.append(face)
+						index = len(self.visibleFaceList)-1
+					assignmentList[highFaceIndex] = currentIndex
+					indices.append(highFaceIndex)
+					totalAssigned +=1
+				else:
+					print "HIGHEST = 0"
+					for j in range(len(rects)):
+						# print rects
+						if j not in assignmentList:
+							# print "here"
+							face = Face()
+							face.id = self.totalFaceCount
+							self.totalFaceCount += 1
+							self.visibleFaceList.append(face)
+							assignmentList.append(j)
+							indices.append(len(assignmentList)-1)
+							totalAssigned += 1
+			# print assignmentList
+			self.makeAssignments(assignmentList,rects, indices, visibleFaces)
+			for i in range(visibleFaces-1):
+				if assignmentList[i] == -1:
+					face = self.visibleFaceList.pop(i)
+					self.notVisibleFaceList.append(face)
+		else:
+			for i in range(len(rects)):
+				self.addNewFace(rects[i])
+
+	def analyzeFrame2(self, rects):
 		self.pruneFaceList()
 		#Case 1
 		if len(rects)>len(self.visibleFaceList):
@@ -115,8 +179,8 @@ class Video:
 							index = j
 							highest = megaList[i][j]
 					if highest > self.minRemovalScore:
-						if j > breakPoint:
-							face = self.notVisibleFaceList.pop(index-breakPoint-1)
+						if i > breakPoint:
+							face = self.notVisibleFaceList.pop(i-breakPoint-1)
 							self.visibleFaceList.append(face)
 							index = len(self.visibleFaceList)-1
 						assignmentList.append(index)
@@ -144,6 +208,8 @@ class Video:
 			# print "case2"
 			megaList, breakPoint = self.dualListHelper(self.visibleFaceList, self.notVisibleFaceList, rects)
 			assignmentList = []
+			# print "list"
+			# print megaList
 			for i in range(len(megaList)):
 				highest = 0
 				index = 0
@@ -153,8 +219,9 @@ class Video:
 						index = j
 						highest = megaList[i][j]
 				if highest > self.minRemovalScore:
-					if j > breakPoint:
-						face = self.notVisibleFaceList.pop(index-breakPoint-1)
+					# print "problem case?"
+					if i > breakPoint:
+						face = self.notVisibleFaceList.pop(i-breakPoint-1)
 						self.visibleFaceList.append(face)
 						index = len(self.visibleFaceList)-1
 					assignmentList.append(index)
@@ -178,6 +245,7 @@ class Video:
 			# print "case3"
 			megaList, breakPoint = self.dualListHelper(self.visibleFaceList, self.notVisibleFaceList, rects)
 			assignmentList = []
+			probabilityList = []
 			for i in range(len(megaList)):
 				highest = 0
 				index = 0
@@ -186,9 +254,10 @@ class Video:
 					if megaList[i][j] >= highest and j not in assignmentList:
 						index = j
 						highest = megaList[i][j]
+				probabilityList.append(highest)
 				if highest > self.minRemovalScore:
-					if j > breakPoint:
-						face = self.notVisibleFaceList.pop(index-breakPoint-1)
+					if i > breakPoint:
+						face = self.notVisibleFaceList.pop(i-breakPoint-1)
 						self.visibleFaceList.append(face)
 						index = len(self.visibleFaceList)-1
 					assignmentList.append(index)
@@ -206,10 +275,12 @@ class Video:
 					face = self.visibleFaceList.pop(k)
 					self.notVisibleFaceList.append(face)
 				k+=1
+			l = 0
+			# while len(assignmentList) > len(rects):
 
 			
 
-	def analyzeFrame2(self,rects):
+	def analyzeFrame3(self,rects):
 		self.pruneFaceList()
 		if len(rects)>len(self.visibleFaceList):
 			if len(self.visibleFaceList)>0:
@@ -310,13 +381,25 @@ class Video:
 
 
 
-	def makeAssignments(self, assignmentList, rects):
+	def makeAssignments(self, assignmentList, rects, indices, visibleFaces):
+		# print "assign"
 		# print assignmentList
 		# print rects
+		counter = 0
 		# print len(self.visibleFaceList)
 		for i in range(len(assignmentList)):
-			# if rects != []:
-			self.visibleFaceList[assignmentList[i]].setPosition(rects[i])
+			if rects != []:
+				if assignmentList[i] != -1:
+					if i < visibleFaces:
+						self.visibleFaceList[i].setPosition(rects[assignmentList[i]])
+					else:
+						print "HERE"
+						print assignmentList
+						print rects
+						print assignmentList[indices[counter]]
+						print rects[assignmentList[indices[counter]]]
+						self.visibleFaceList[counter+visibleFaces].setPosition(rects[assignmentList[indices[counter]]])
+						counter += 1
 
 
 	def scoreForBeingHere(self, face1, rect):
@@ -389,12 +472,12 @@ class Video:
 	def display(self):
 		""" Displays current frame with rectangles and boxes"""
 		# print len(self.visibleFaceList)
-		print "not visible: "
-		for face in self.notVisibleFaceList:
-			print face.id
-		print "visibel: "
+		# print "not visible: "
+		# for face in self.notVisibleFaceList:
+		# 	print face.id
+		# print "visibel: "
 		for i in range(len(self.visibleFaceList)):
-			print self.visibleFaceList[i].id
+			# print self.visibleFaceList[i].id
 			self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].id)
 		cv2.imshow("show", self.frameImage)
 
