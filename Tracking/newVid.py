@@ -85,7 +85,7 @@ class Video:
 
 
 	def analyzeFrame(self, rects):
-		if (len(self.visibleFaceList)<1):
+		if (len(self.visibleFaceList)<1 and len(self.notVisibleFaceList)<1):
 			for i in range(len(rects)):
 				self.addNewFace(rects[i])
 		else:
@@ -134,11 +134,13 @@ class Video:
 			notVisLen = len(self.notVisibleFaceList)
 			for i in reversed(range(notVisLen)):
 				if (i in usedNotVisibleFaces):
+					print "Not visible to visible"
 					face = self.notVisibleFaceList.pop(i)
 					self.visibleFaceList.append(face)
 			# create new faces for all unmatched rects
 			for i in range(len(rects)):
 				if (i not in usedRects):
+					print "Make new face"
 					self.addNewFace(rects[i])
 
 

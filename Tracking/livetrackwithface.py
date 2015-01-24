@@ -1,6 +1,6 @@
 import cv2
 import os
-from video import Video
+from newVid import Video
 
 			# # Always between 0 and 1
 			# self.velocityWeight = variableList[0]
@@ -18,7 +18,7 @@ def goGetEm():
 	# vid = Video("facepic3.jpg")
 	# isVid = False
 	#vid = Video("Slightmovement.MP4", [0,1,0.1,0.1,1000,0])
-	vid = Video(0, [0,1,0.01,0.5,1000,0, 20, True])
+	vid = Video(0, [10,1,0.01,0.5,1000,0, 20, True])
 	isVid = True
 	# vid.readFrame()
 	if isVid==True:
