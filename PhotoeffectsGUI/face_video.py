@@ -83,7 +83,7 @@ class AddOptions(QWidget):
             grid.addWidget(button, count/4, count % 4)
             button.clicked.connect(button.click)
             count+=1
-        print count
+        #print count
 
         self.setLayout(grid)
 
@@ -148,20 +148,33 @@ class FaceOptions(QWidget):
             
 class ControlBox(QWidget):
     '''Panel that contains all buttons/widgets except for main image and screenshot button.'''
-    def __init__(self, faces, rects,window):
+    def __init__(self,window):
         QWidget.__init__(self)
-        self.faces = faces
-        self.rects = rects
+        self.faces = []
+        self.rects = []
         self.window = window
         self.setSizePolicy (
             QSizePolicy (
                 QSizePolicy.Expanding,
                 QSizePolicy.Expanding))
         self.setMinimumSize(400, 600)
+        self.grid = QGridLayout()
+        self.faceChecks = None
         self.draw()
+    
+    def setFaces(self,faces, rects):
+        self.faces = faces
+        self.rects = rects
+        
+        # Redraws image
+        self.grid.removeWidget(self.faceChecks)
+        self.faceChecks = FaceOptions(self.faces, self.rects)
+        self.grid.addWidget(self.faceChecks, 2, 0)
 
     def draw(self):
-        grid = QGridLayout()
+        #grid = QGridLayout()
+        
+        print "Inside rightbox.draw():", self.faces, self.rects
         
         ppbutton = QPushButton("Play/Pause")
         ppbutton.setSizePolicy (
@@ -169,24 +182,24 @@ class ControlBox(QWidget):
                 QSizePolicy.Expanding,
                 QSizePolicy.Fixed))
         ppbutton.setMinimumSize(200, 50)
-        grid.addWidget(ppbutton, 0, 0)
+        self.grid.addWidget(ppbutton, 0, 0)
         
         label = QLabel("Add effects to selected face(s)")
-        grid.addWidget(label,1,0,Qt.AlignHCenter)
-        
-        self.faceChecks = FaceOptions(self.faces, self.rects)
-        grid.addWidget(self.faceChecks, 2, 0)
+        self.grid.addWidget(label,1,0,Qt.AlignHCenter)
         
         addOptions = AddOptions(self.window)
-        grid.addWidget(addOptions, 3, 0)
+        self.grid.addWidget(addOptions, 3, 0)
         
         label = QLabel("Draw")
-        grid.addWidget(label,4,0,Qt.AlignHCenter)
+        self.grid.addWidget(label,4,0,Qt.AlignHCenter)
         
         drawOptions = DrawOptions()
-        grid.addWidget(drawOptions, 5, 0)
+        self.grid.addWidget(drawOptions, 5, 0)
         
-        self.setLayout(grid)
+        self.setLayout(self.grid)
+        
+        
+        
 
     def paintEvent (self, eventQPaintEvent):
         '''Creates a black rectangle around the entire ControlBox. Called automatically.'''
@@ -307,7 +320,7 @@ class GuiWindow(QWidget):
     def draw(self):
         grid = QGridLayout()
         
-        faces2, rects = get_faces("screenshot.jpg")
+        
         """
         self.leftbox = ImageBox()
         grid.addWidget(self.leftbox,0,0)
@@ -321,8 +334,13 @@ class GuiWindow(QWidget):
         self.leftbox = ImageBox()
         grid.addWidget(self.leftbox,0,0)
         
-        self.rightbox = ControlBox(faces2,rects,self)
+        #faces2, rects = get_faces("screenshot.jpg")
+        #print rects
+        self.rightbox = ControlBox(self)
+        #self.rightbox.setFaces(faces2, rects)
         grid.addWidget(self.rightbox, 0, 1)
+        
+        
         #cap = cv2.VideoCapture(0)
         vid = Video(0)
         
@@ -331,19 +349,18 @@ class GuiWindow(QWidget):
         
         while(True):
             vid.readFrame()
-            
-            
+            #self.rightbox.setFaces(faces2, rects)
             frame_as_string_before = vid.getCurrentFrame().tostring()
             vid.findFaces()
             frame = vid.getCurrentFrame()
             
-            #print vid.getFaces()
+            rects = []
+            face_list = vid.getFaces()
+            for face in face_list:
+                tuples = face.getPosition()
+                rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
+                
 
-            #cv2.imshow('frame',frame)
-            #time.sleep(.1)
-            #print frame
-            #ret, frame = cap.read()    
-        
             frame_as_string_in_between = frame.tostring()
             assert frame_as_string_before == frame_as_string_in_between
 
@@ -352,30 +369,20 @@ class GuiWindow(QWidget):
             
             image = QImage(frame_as_string,\
             frame.shape[1],frame.shape[0],QImage.Format_RGB888)
-            pixmap = QPixmap.fromImage(image)
-            #print frame.shape[1],frame.shape[0]
-            #print pixmap.size().height(), pixmap.size().width()
+            pixmap = QPixmap.fromImage(image) 
             
-#            #time.sleep(1)
-#            #pixmap = QPixmap(frame.tostring(),\
-#            #    frame.shape[1],frame.shape[0],QImage.Format_RGB888)
-#            
-#            
-#            
+            
+            face_pics = get_imgs_from_rects(image, rects)
+           
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
                 
             self.leftbox.set_image(pixmap)
-            
+            print "before adding to rightbox:", face_pics, rects
+            self.rightbox.setFaces(face_pics, rects)
             
             self.setLayout(grid)
             self.show()
-            #time.sleep(1)
-            
-            
-        #self.setLayout(grid)
-        #self.show()
-       
             
     
 
@@ -405,40 +412,26 @@ def get_faces(image_path):
     rects, img = detect(image_path)
     faces = []
     for rect in rects:
-        listrect = rect.tolist()
+        #listrect = rect.tolist()
         qimg = QImage(image_path)
-        copy = qimg.copy(listrect[0],listrect[1],listrect[2]-listrect[0],listrect[3]-listrect[1])
+        copy = qimg.copy(rect[0],rect[1],rect[2]-rect[0],rect[3]-rect[1])
         faces.append(copy)
     return faces, rects
     
     
+def get_imgs_from_rects(img, rects):
+    '''Returns images of faces and their locations in the original image. 
+    Will be replaced by something from our architecture.'''
+    #rects, img = detect(image_path)
+    faces = []
+    for rect in rects:
+        #listrect = rect.tolist()
+        #qimg = QImage(image_path)
+        copy = img.copy(rect[0],rect[1],rect[2]-rect[0],rect[3]-rect[1])
+        faces.append(copy)
+    return faces
     
-def goGetEm():
-    # vid = Video("facepic3.jpg")
-    # isVid = False
-    vid = Video(0)
-    isVid = True
-    # vid.readFrame()
-    if isVid==True:
-        while (True):
-            vid.readFrame()
-            vid.findFaces()
-            print vid.getFaces()
-            vid.display()
-            #print vid.getFaces()
-            # exit on escape key
-            key = cv2.waitKey(20)
-            if key == 27:
-                break
-        vid.endWindow()
-    else:
-        vid.readFrame()
-        vid.findFaces()
-        vid.display()
-        while (True):
-            key = cv2.waitKey(20)
-            if key == 27:
-                break
+
 
 def main():
     app = QApplication(sys.argv)
