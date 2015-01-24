@@ -35,6 +35,12 @@ class Face:
 			self.position = [(rects[0],rects[1]),(rects[2],rects[3]),dt.datetime.now()]
 			self.timeSinceDetection = 0
 
+	def getID(self):
+		return self.id
+
+	def setID(self, newID):
+		self.id = newID
+
 	def getArea(self):
 		"""using position, return area of face"""
 		if (self.position==[]):

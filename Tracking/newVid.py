@@ -61,13 +61,13 @@ class Video:
 			timeSinceDetection = dt.datetime.now()-pos[2]
 			if timeSinceDetection.total_seconds() > self.timeOut:
 				print timeSinceDetection.total_seconds()
-				print self.notVisibleFaceList[i].id
+				print self.notVisibleFaceList[i].getID()
 				self.inactiveFaceList.append(self.notVisibleFaceList.pop(i))
 			i += 1
 
 	def addNewFace(self, location):
 		fc = Face()
-		fc.id = self.totalFaceCount
+		fc.setID(self.totalFaceCount)
 		self.totalFaceCount += 1
 		fc.setPosition(location)
 		self.visibleFaceList.append(fc)
@@ -102,7 +102,6 @@ class Video:
 			usedRects = []
 			usedVisibleFaces = []
 			usedNotVisibleFaces = []
-
 			# set positions for optimum rects and faces (visible and not)
 			for i in range(len(scoreList)):
 				ur = scoreList[i][3] not in usedRects
@@ -148,7 +147,6 @@ class Video:
 			mid = len(alist)//2
 			lefthalf = alist[:mid]
 			righthalf = alist[mid:]
-
 			self.mergeSort(lefthalf)
 			self.mergeSort(righthalf)
 
@@ -156,37 +154,23 @@ class Video:
 			j=0
 			k=0
 			while i<len(lefthalf) and j<len(righthalf):
-				if lefthalf[i][0]<righthalf[j][0]:
+				if lefthalf[i][0]>righthalf[j][0]:
 					alist[k]=lefthalf[i]
 					i=i+1
 				else:
 					alist[k]=righthalf[j]
 					j=j+1
 				k=k+1
-
 			while i<len(lefthalf):
 				alist[k]=lefthalf[i]
 				i=i+1
 				k=k+1
-
 			while j<len(righthalf):
 				alist[k]=righthalf[j]
 				j=j+1
 				k=k+1
 
 		
-	def makeAssignments(self, assignmentList, rects, indices, visibleFaces):
-		counter = 0
-		for i in range(len(assignmentList)):
-			if rects != []:
-				if assignmentList[i] != -1:
-					if i < visibleFaces:
-						self.visibleFaceList[i].setPosition(rects[assignmentList[i]])
-					else:
-						self.visibleFaceList[counter+visibleFaces].setPosition(rects[assignmentList[indices[counter]]])
-						counter += 1
-
-
 	def scoreForBeingHere(self, face1, rect):
 		"""compares face and rect to sees what the chances are that they are the same
 		returns float between 0 and 1"""
@@ -197,21 +181,23 @@ class Video:
 			velocity = face1.getVelocity()
 			area = math.pow(face1.getArea(),0.5)
 			if self.usingTime:
-				radius = deltaTime*area*self.radiusSize
+				# radius = deltaTime*area*self.radiusSize
+				radius = area*self.radiusSize
 			else:
 				radius = area*self.radiusSize
 			middleOfRect = ((rect[2]+rect[0])/2,(rect[3]+rect[1])/2)
 			middleOfFace = ((recentPosition[1][0]+recentPosition[0][0])/2,(recentPosition[1][1]+recentPosition[0][1])/2)
-			if velocity != 0:
-				middleOfFace = (middleOfFace[0] + velocity[0]/velocity[2]*deltaTime*self.velocityWeight, middleOfFace[1] + velocity[1]/velocity[2]*deltaTime*self.velocityWeight)
+			# if velocity != 0:
+			# 	middleOfFace = (middleOfFace[0] + velocity[0]/velocity[2]*deltaTime*self.velocityWeight, middleOfFace[1] + velocity[1]/velocity[2]*deltaTime*self.velocityWeight)
 			diffMiddles = math.pow(math.pow(middleOfFace[0]-middleOfRect[0], 2) + math.pow(middleOfFace[1]-middleOfRect[1], 2), 0.5)
 			
 			# asymptote equation such that after the difference in middles is more than 1 radius away,
 			# prob will be down to 0.25 but after that it slowly goes to 0 never quite reaching it
 			x = math.pow(diffMiddles/radius,3)
+			t = math.pow(deltaTime,2)
 			# decays with increase in time
 			if self.usingTime:
-				score = self.scoreWeight/(deltaTime*(3*x+1))
+				score = self.scoreWeight/(t*(3*x+1))
 			else:
 				score = self.scoreWeight/((3*x+1))
 			return score
@@ -240,7 +226,7 @@ class Video:
 	def display(self):
 		""" Displays current frame with rectangles and boxes"""
 		for i in range(len(self.visibleFaceList)):
-			self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].id)
+			self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].getID())
 		cv2.imshow("show", self.frameImage)
 
 
