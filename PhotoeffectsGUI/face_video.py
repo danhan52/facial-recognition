@@ -8,8 +8,8 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 import os
 # Change for particular machine
-#sys.path.append("/Users/Katja/COMPS/facial-recognition/Tracking")
-sys.path.append("/Accounts/collierk/COMPS/facial-recognition/Tracking")
+sys.path.append("/Users/Katja/COMPS/facial-recognition/Tracking")
+#sys.path.append("/Accounts/collierk/COMPS/facial-recognition/Tracking")
 #import architecture
 #from architecture import *
 from video import Video
@@ -83,6 +83,7 @@ class AddOptions(QWidget):
             grid.addWidget(button, count/4, count % 4)
             button.clicked.connect(button.click)
             count+=1
+        print count
 
         self.setLayout(grid)
 
@@ -156,8 +157,7 @@ class ControlBox(QWidget):
             QSizePolicy (
                 QSizePolicy.Expanding,
                 QSizePolicy.Expanding))
-        self.setMinimumSize(350, 600)
-
+        self.setMinimumSize(400, 600)
         self.draw()
 
     def draw(self):
@@ -307,7 +307,8 @@ class GuiWindow(QWidget):
     def draw(self):
         grid = QGridLayout()
         
-        """faces, rects = get_faces("screenshot.jpg")
+        faces2, rects = get_faces("screenshot.jpg")
+        """
         self.leftbox = ImageBox()
         grid.addWidget(self.leftbox,0,0)
         
@@ -319,45 +320,56 @@ class GuiWindow(QWidget):
         
         self.leftbox = ImageBox()
         grid.addWidget(self.leftbox,0,0)
-        #goGetEm()
         
-        
+        self.rightbox = ControlBox(faces2,rects,self)
+        grid.addWidget(self.rightbox, 0, 1)
         #cap = cv2.VideoCapture(0)
         vid = Video(0)
         
+        #self.setLayout(grid)
+        #self.show()
+        
         while(True):
-            time.sleep(.1)
             vid.readFrame()
             
-            vid.findFaces()
-            time.sleep(.1)
-            frame = vid.getCurrentFrame()
-            print frame[100][100]
             
-            time.sleep(.1)
-            print vid.getFaces()
-            time.sleep(.1)
-            cv2.imshow('frame',frame)
-            time.sleep(.1)
+            frame_as_string_before = vid.getCurrentFrame().tostring()
+            vid.findFaces()
+            frame = vid.getCurrentFrame()
+            
+            #print vid.getFaces()
+
+            #cv2.imshow('frame',frame)
+            #time.sleep(.1)
             #print frame
             #ret, frame = cap.read()    
         
-#            cv2.cvtColor(frame, cv.CV_BGR2RGB, frame)
-#            image = QImage(frame.tostring(),\
-#                frame.shape[1],frame.shape[0],QImage.Format_RGB888)
-#            pixmap = QPixmap.fromImage(image)
+            frame_as_string_in_between = frame.tostring()
+            assert frame_as_string_before == frame_as_string_in_between
+
+            cv2.cvtColor(frame, cv.CV_BGR2RGB, frame)
+            frame_as_string = frame.tostring()
+            
+            image = QImage(frame_as_string,\
+            frame.shape[1],frame.shape[0],QImage.Format_RGB888)
+            pixmap = QPixmap.fromImage(image)
+            #print frame.shape[1],frame.shape[0]
+            #print pixmap.size().height(), pixmap.size().width()
+            
 #            #time.sleep(1)
 #            #pixmap = QPixmap(frame.tostring(),\
 #            #    frame.shape[1],frame.shape[0],QImage.Format_RGB888)
 #            
 #            
 #            
-#            if cv2.waitKey(1) & 0xFF == ord('q'):
-#                break
-#                
-#            self.leftbox.set_image(pixmap)
-#            self.setLayout(grid)
-#            self.show()
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+                
+            self.leftbox.set_image(pixmap)
+            
+            
+            self.setLayout(grid)
+            self.show()
             #time.sleep(1)
             
             
@@ -379,7 +391,7 @@ def detect(path):
     '''Detects areas of given image that contain faces. Will be replaced by something from the architecture.'''
     img = cv2.imread(path)
     # Change for particular machine.
-    face_cascade = cv2.CascadeClassifier("/Accounts/collierk/Downloads/haarcascade_frontalface_alt.xml")
+    face_cascade = cv2.CascadeClassifier("face_cascade2.xml")
     rects = face_cascade.detectMultiScale(img, 1.3, 4, cv2.cv.CV_HAAR_SCALE_IMAGE, (20,20))
 
     if len(rects) == 0:
@@ -393,7 +405,6 @@ def get_faces(image_path):
     rects, img = detect(image_path)
     faces = []
     for rect in rects:
-        print rect
         listrect = rect.tolist()
         qimg = QImage(image_path)
         copy = qimg.copy(listrect[0],listrect[1],listrect[2]-listrect[0],listrect[3]-listrect[1])
