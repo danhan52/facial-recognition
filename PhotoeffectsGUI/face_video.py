@@ -107,19 +107,37 @@ class AddOptions(QWidget):
 class FaceOptions(QWidget):
     '''Displays all faces detected in the main image, with a checkbox for each face. Keeps track
     of where faces are located and which ones have been checked.'''
-    def __init__(self, faces, rects):
+    def __init__(self):
         QWidget.__init__(self)
-        self.faces = faces
-        self.rects = rects
+        self.faces = []
+        self.face_pics = []
+        self.old_face_ids = []
         self.checkboxes = []
-        self.draw()
+        self.grid = QGridLayout()
+        self.old_face_pics = []
+        self.old_checks = []
+        
+        
+    def setFaces(self, face_pics, faces):
+        self.faces = faces
+        self.face_pics = face_pics
+        
+        new_face_ids = [f.getID() for f in self.faces]
+        print "old vs. new face_IDS:", self.old_face_ids, new_face_ids
+        if set(self.old_face_ids) != set(new_face_ids):
+            self.draw()
         
     def draw(self):
         '''Note: don't call this except in initialization.'''
-        grid = QGridLayout()
-
+        print "in draw"
         count = 0
-        for img in self.faces:
+        #for pic in self.old_face_pics:
+        #    self.grid.removeWidget(pic)
+        #for check in self.old_checks:
+        #    self.grid.removeWidget(check)
+        self.old_face_pics = []
+        self.old_checks = []
+        for img in self.face_pics:
             pixmap = QPixmap(img)
             piclabel = QLabel()
             piclabel.setPixmap(pixmap)
@@ -129,19 +147,24 @@ class FaceOptions(QWidget):
             relationship = float(width)/height
             piclabel.setMaximumSize(relationship*60, 60)
             piclabel.setMinimumSize(relationship*60, 60)
-            grid.addWidget(piclabel, 2 + 2*(count/3),count % 3)
-
+            self.grid.addWidget(piclabel, 2 + 2*(count/3),count % 3)
             checkbox = QCheckBox()
             self.checkboxes.append(checkbox)
-            grid.addWidget(checkbox, 3 + 2*(count/3), count % 3, Qt.AlignHCenter)
+            self.grid.addWidget(checkbox, 3 + 2*(count/3), count % 3, Qt.AlignHCenter)
             count+=1
+            self.old_face_pics.append(piclabel)
+            self.old_checks.append(checkbox)
+            
+        self.old_face_ids = [f.getID() for f in self.faces]
+        #print self.old_face_IDs
 
-        self.setLayout(grid)
+        self.setLayout(self.grid)
         
     def getCheckedFaces(self):
         '''Returns the coordinates (in the original image) of the faces that have been selected
         (checked) in FaceOptions.'''
-        return [self.rects[i] for i in range(len(self.rects)) if self.checkboxes[i].isChecked()]
+        #return [self.rects[i] for i in range(len(self.rects)) if self.checkboxes[i].isChecked()]
+        return []
             
 
 
@@ -159,22 +182,22 @@ class ControlBox(QWidget):
                 QSizePolicy.Expanding))
         self.setMinimumSize(400, 600)
         self.grid = QGridLayout()
-        self.faceChecks = None
+        self.faceChecks = FaceOptions()
         self.draw()
     
-    def setFaces(self,faces, rects):
+    def setFaces(self,face_pics, faces):
+        self.face_pics = face_pics
         self.faces = faces
-        self.rects = rects
         
         # Redraws image
         self.grid.removeWidget(self.faceChecks)
-        self.faceChecks = FaceOptions(self.faces, self.rects)
+        self.faceChecks.setFaces(self.face_pics, self.faces)
         self.grid.addWidget(self.faceChecks, 2, 0)
 
     def draw(self):
         #grid = QGridLayout()
         
-        print "Inside rightbox.draw():", self.faces, self.rects
+        #print "Inside rightbox.draw():", self.faces, self.rects
         
         ppbutton = QPushButton("Play/Pause")
         ppbutton.setSizePolicy (
@@ -378,8 +401,8 @@ class GuiWindow(QWidget):
                 break
                 
             self.leftbox.set_image(pixmap)
-            print "before adding to rightbox:", face_pics, rects
-            self.rightbox.setFaces(face_pics, rects)
+            #print "before adding to rightbox:", face_pics, rects
+            self.rightbox.setFaces(face_pics, face_list)
             
             self.setLayout(grid)
             self.show()

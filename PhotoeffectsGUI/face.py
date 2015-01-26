@@ -20,6 +20,12 @@ class Face:
 		self.attachedObjects = []  
 		# list of features/locations
 		self.features = [] 
+        
+	def getID(self):
+		return self.id
+
+	def setID(self, newID):
+		self.id = newID
 
 	
 	def getPosition(self):
@@ -104,3 +110,9 @@ class Face:
 	def getAttachedObjects(self):
 		"""Returns a list of objects and/or effects that are associated with this face."""
 		return self.attachedObjects
+    
+	#def __eq__(self, ?):
+    
+	def __str__(self):
+		return "Face with ID: " + str(self.id) + "; at location: " + str(self.position)
+        
