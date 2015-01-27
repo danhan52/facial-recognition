@@ -111,6 +111,7 @@ class FaceOptions(QWidget):
         QWidget.__init__(self)
         self.faces = []
         self.face_pics = []
+        self.face_ids = []
         self.old_face_ids = []
         self.checkboxes = []
         self.grid = QGridLayout()
@@ -122,19 +123,26 @@ class FaceOptions(QWidget):
         self.faces = faces
         self.face_pics = face_pics
         
-        new_face_ids = [f.getID() for f in self.faces]
-        print "old vs. new face_IDS:", self.old_face_ids, new_face_ids
-        if set(self.old_face_ids) != set(new_face_ids):
+        self.face_ids = [f.getID() for f in self.faces]
+        #print "old vs. new face_IDS:", self.old_face_ids, self.face_ids
+        if set(self.old_face_ids) != set(self.face_ids):
             self.draw()
-        
+#        self.draw()
+
+
     def draw(self):
         '''Note: don't call this except in initialization.'''
         print "in draw"
         count = 0
-        #for pic in self.old_face_pics:
-        #    self.grid.removeWidget(pic)
-        #for check in self.old_checks:
-        #    self.grid.removeWidget(check)
+        
+        # This is bad. Don't uncomment.
+#        for pic in self.old_face_pics:
+#            self.grid.removeWidget(pic)
+#        for check in self.old_checks:
+#            self.grid.removeWidget(check)
+    
+        self.deleteAll()
+
         self.old_face_pics = []
         self.old_checks = []
         for img in self.face_pics:
@@ -159,14 +167,22 @@ class FaceOptions(QWidget):
         #print self.old_face_IDs
 
         self.setLayout(self.grid)
+    
+    def deleteAll(self):
+        for i in range(self.grid.count()):
+            child = self.grid.takeAt(i)
+            #print i
+            if child:
+                x = child.widget()
+                x.setParent(None)
+                del x
         
     def getCheckedFaces(self):
-        '''Returns the coordinates (in the original image) of the faces that have been selected
+        '''Returns the face ids of the faces that have been selected
         (checked) in FaceOptions.'''
         #return [self.rects[i] for i in range(len(self.rects)) if self.checkboxes[i].isChecked()]
-        return []
+        return [self.face_ids[i] for i in range(len(self.face_ids)) if self.checkboxes[i].isChecked()]
             
-
 
             
 class ControlBox(QWidget):
@@ -195,10 +211,6 @@ class ControlBox(QWidget):
         self.grid.addWidget(self.faceChecks, 2, 0)
 
     def draw(self):
-        #grid = QGridLayout()
-        
-        #print "Inside rightbox.draw():", self.faces, self.rects
-        
         ppbutton = QPushButton("Play/Pause")
         ppbutton.setSizePolicy (
             QSizePolicy (
@@ -338,37 +350,20 @@ class GuiWindow(QWidget):
     '''Creates a main GUI Window that contains all other objects and handles interactions between them.'''
     def __init__(self):
         QWidget.__init__(self)
+        self.face_list = []
         self.draw()
+        
 
     def draw(self):
         grid = QGridLayout()
         
-        
-        """
         self.leftbox = ImageBox()
         grid.addWidget(self.leftbox,0,0)
-        
-        self.rightbox = ControlBox(faces,rects,self)
-        grid.addWidget(self.rightbox, 0, 1)
-        
-        self.setLayout(grid)
-        self.show()"""
-        
-        self.leftbox = ImageBox()
-        grid.addWidget(self.leftbox,0,0)
-        
-        #faces2, rects = get_faces("screenshot.jpg")
-        #print rects
+
         self.rightbox = ControlBox(self)
-        #self.rightbox.setFaces(faces2, rects)
         grid.addWidget(self.rightbox, 0, 1)
         
-        
-        #cap = cv2.VideoCapture(0)
         vid = Video(0)
-        
-        #self.setLayout(grid)
-        #self.show()
         
         while(True):
             vid.readFrame()
@@ -378,7 +373,7 @@ class GuiWindow(QWidget):
             frame = vid.getCurrentFrame()
             
             rects = []
-            face_list = vid.getFaces()
+            self.face_list = vid.getFaces()
             for face in face_list:
                 tuples = face.getPosition()
                 rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
@@ -401,7 +396,6 @@ class GuiWindow(QWidget):
                 break
                 
             self.leftbox.set_image(pixmap)
-            #print "before adding to rightbox:", face_pics, rects
             self.rightbox.setFaces(face_pics, face_list)
             
             self.setLayout(grid)
@@ -411,10 +405,19 @@ class GuiWindow(QWidget):
 
     def add_option_clicked(self, button_name):
         '''When PictureButton is clicked, tells main image to redraw appropriately.'''
-        checked_boxes = self.rightbox.faceChecks.getCheckedFaces()
-        print checked_boxes
-        print button_name
-        self.leftbox.draw_object(checked_boxes,button_name)
+        checked_faces = self.rightbox.faceChecks.getCheckedFaces()
+        print "face ids:", checked_faces, " button_name:", button_name
+        
+        # Make this actually work! Should alter face objects to add the new "thing", then 
+        # need to change code in ImageBox or GuiWindow.draw() to draw things on faces
+        for face_id in checked_faces:
+            face = "the face that corresponds with that id from self.face_list"
+            face.addAttachedObject(button_name)
+        
+        # Old code: drew on image
+        #self.leftbox.draw_object(checked_boxes,button_name)
+        
+        # 
         
 
 def detect(path):
