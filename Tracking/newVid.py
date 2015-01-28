@@ -16,6 +16,7 @@ class Video:
 		self.cleanThresh = 0
 		# PERHAPS SUBCLASS?
 		self.frameImage = None          # this is whatever kind of image returned by openCV
+		self.previousFrame = None
 		self.showWindow = showWindow
 
 		if self.showWindow:
@@ -243,6 +244,7 @@ class Video:
 
 	def readFrame(self):
 		"""read frame from openCV info"""
+		self.previousFrame = self.frameImage
 		success, self.frameImage = self.vidcap.read()
 		return success, self.frameImage
 

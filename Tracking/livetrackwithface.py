@@ -18,7 +18,7 @@ def goGetEm():
 	# vid = Video("facepic3.jpg")
 	# isVid = False
 	#vid = Video("Slightmovement.MP4", [0,1,0.1,0.1,1000,0])
-	vid = Video(0, [10,1,0.01,0.5,1000,0, 20, True])
+	vid = Video(0, [1,1,0.01,0.5,100,0, 20, True])
 	isVid = True
 	# vid.readFrame()
 	if isVid==True:

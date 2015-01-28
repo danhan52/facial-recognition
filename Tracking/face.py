@@ -14,6 +14,7 @@ class Face:
 		self.colorAvg = 0			# average pixel intensity of facial region
 		self.usingFeatures = useFeatures
 		self.id = 0
+		self.colorProfile = [][]
 		
 		# list of mini-images that are attached to the face
 		# (each entry contains info about what the image is, where it is, area, etc.)
@@ -21,7 +22,12 @@ class Face:
 		# list of features/locations
 		self.features = [] 
 
-	
+	def setColorProfile(self, colorProfile):
+		self.colorProfile = colorProfile
+
+	def getColorProfile(self):
+		return self.colorProfile
+
 	def getPosition(self):
 		return self.position
 
