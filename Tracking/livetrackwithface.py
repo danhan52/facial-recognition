@@ -13,12 +13,13 @@ from newVid import Video
 			# self.frameGap = variableList[5]
 			# self.cleanThresh = variableList[6]
 			# self.usingTime = variableList[7]
+            # self.binNum = variableList[8]
 
 def goGetEm():
 	# vid = Video("facepic3.jpg")
 	# isVid = False
 	#vid = Video("Slightmovement.MP4", [0,1,0.1,0.1,1000,0])
-	vid = Video(0, [1,1,0.01,0.5,100,0, 20, True])
+	vid = Video(0, [1,1,0.01,0.5,100,0, 20, True, 100])
 	isVid = True
 	# vid.readFrame()
 	if isVid==True:

@@ -14,7 +14,7 @@ class Face:
 		self.colorAvg = 0			# average pixel intensity of facial region
 		self.usingFeatures = useFeatures
 		self.id = 0
-		self.colorProfile = [][]
+		self.colorProfile = []
 		
 		# list of mini-images that are attached to the face
 		# (each entry contains info about what the image is, where it is, area, etc.)

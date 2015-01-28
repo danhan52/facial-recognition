@@ -3,6 +3,7 @@ import datetime as dt
 import cv2
 import os
 from face import Face
+from colorImport import *
 
 class Video:
 	def __init__(self, vidSource, variableList=[], showWindow=True):
@@ -34,6 +35,7 @@ class Video:
 			self.frameGap = 0
 			self.cleanThresh = 5
 			self.usingTime = True
+			self.binNum = 100
 		# add a catch statement for if variable list isn't of length 6
 		else:
 			# Always between 0 and 1
@@ -47,6 +49,7 @@ class Video:
 			self.frameGap = variableList[5]
 			self.cleanThresh = variableList[6]
 			self.usingTime = variableList[7]
+			self.binNum = variableList[8]
 
 
 	def getFaces(self):
@@ -217,6 +220,12 @@ class Video:
 		else:
 			rects[:, 2:] += rects[:, :2]
 		self.analyzeFrame(rects)
+		#self.setAllColorProfiles()
+    
+	def setAllColorProfiles(self):
+		for face in self.visibleFaceList:
+			prof = setProfile(self.frameImage, face.getPosition(), self.binNum)
+			face.setColorProfile(prof)
 
 
 	def detectAll(self):
