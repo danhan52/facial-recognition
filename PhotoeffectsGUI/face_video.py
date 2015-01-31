@@ -124,7 +124,8 @@ class FaceOptions(QWidget):
         self.face_pics = face_pics
         
         self.face_ids = [f.getID() for f in self.faces]
-        #print "old vs. new face_IDS:", self.old_face_ids, self.face_ids
+        print "old vs. new face_IDS:", self.old_face_ids, self.face_ids
+        print "checked boxes:", [c.isChecked() for c in self.checkboxes]
         if set(self.old_face_ids) != set(self.face_ids):
             self.draw()
 #        self.draw()
@@ -181,6 +182,7 @@ class FaceOptions(QWidget):
         '''Returns the face ids of the faces that have been selected
         (checked) in FaceOptions.'''
         #return [self.rects[i] for i in range(len(self.rects)) if self.checkboxes[i].isChecked()]
+        
         return [self.face_ids[i] for i in range(len(self.face_ids)) if self.checkboxes[i].isChecked()]
             
 
@@ -374,7 +376,7 @@ class GuiWindow(QWidget):
             
             rects = []
             self.face_list = vid.getFaces()
-            for face in face_list:
+            for face in self.face_list:
                 tuples = face.getPosition()
                 rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
                 
@@ -396,7 +398,7 @@ class GuiWindow(QWidget):
                 break
                 
             self.leftbox.set_image(pixmap)
-            self.rightbox.setFaces(face_pics, face_list)
+            self.rightbox.setFaces(face_pics, self.face_list)
             
             self.setLayout(grid)
             self.show()

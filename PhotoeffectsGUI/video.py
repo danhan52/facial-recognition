@@ -44,7 +44,7 @@ class Video:
 
 
 	def getFaces(self):
-		return self.visibleFaceList
+		return self.visibleFaceList + self.notVisibleFaceList
 
 	def getCurrentFrame(self):
 		return self.frameImage
