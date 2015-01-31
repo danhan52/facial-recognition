@@ -170,6 +170,7 @@ class FaceOptions(QWidget):
         self.setLayout(self.grid)
     
     def deleteAll(self):
+        self.checkboxes = []
         for i in range(self.grid.count()):
             child = self.grid.takeAt(i)
             #print i
@@ -183,7 +184,7 @@ class FaceOptions(QWidget):
         (checked) in FaceOptions.'''
         #return [self.rects[i] for i in range(len(self.rects)) if self.checkboxes[i].isChecked()]
         
-        return [self.face_ids[i] for i in range(len(self.face_ids)) if self.checkboxes[i].isChecked()]
+        return [self.faces[i] for i in range(len(self.faces)) if self.checkboxes[i].isChecked()]
             
 
             
@@ -259,11 +260,12 @@ class ImageBox(QWidget):
         self.grid = QGridLayout()
         self.pixmap = None
         #self.draw()
+        #self.faces = []
         
-    def set_image(self, img):
+    def set_image(self, img, faces):
         #self.pixmap = QPixmap(img)
         self.pixmap = img
-        self.draw()
+        self.draw_objects(faces)
         
     def draw(self):
         self.piclabel.setPixmap(self.pixmap)
@@ -279,68 +281,59 @@ class ImageBox(QWidget):
         self.grid.addWidget(button,1,1)
         self.setLayout(self.grid)
         
-    def draw_object(self,rects,icon_name):
+    def draw_objects(self,faces):
         '''Redraws main image to include clicked item/effect for given faces.'''
         base = self.pixmap
-        overlay = QPixmap(os.path.join("icons", icon_name))
+        #overlay = QPixmap(os.path.join("icons", icon_name))
         result = QPixmap(base.width(), base.height())
         result.fill(Qt.black)
         painter = QPainter(result)
         painter.drawPixmap(0, 0, base)
         
         # Draws icon on each face given.
-        for rect in rects:
-            overlay_copy = overlay.copy()
-            width = rect[2]-rect[0]
-            height = rect[3]-rect[1]
-            if icon_name == "yellow-sunglasses.png":
-                overlay_copy = overlay_copy.scaledToWidth(width)
-                amount_to_go_down = height/4.5
-                painter.drawPixmap(rect[0], rect[1] + amount_to_go_down, overlay_copy)
-            elif icon_name == "mustache.png":
-                overlay_copy = overlay_copy.scaledToWidth(width/2.0)
-                amount_to_go_down = 3.0*height/5.0
-                painter.drawPixmap(rect[0]+width/4.0, rect[1] + amount_to_go_down, overlay_copy)
-            elif icon_name == "purplehat.png":
-                overlay_copy = overlay_copy.scaledToWidth(width*2)
-                amount_to_go_down = -3.0*height/5.0
-                painter.drawPixmap(rect[0]-width/2.25, rect[1] + amount_to_go_down, overlay_copy)
-            elif icon_name == "groucho_glasses.png":
-                overlay_copy = overlay_copy.scaledToWidth(width)
-                amount_to_go_down = 0
-                painter.drawPixmap(rect[0], rect[1] + amount_to_go_down, overlay_copy)
-            elif icon_name == "blurry.jpg":
-                face_image = base.copy(rect[0]+5, rect[1]-10, width-10, height+20).toImage()
-                blurred_image = face_image.copy()
-                b_a = width/12
-                cur = QColor.fromRgb(blurred_image.pixel(b_a/2, b_a/2))
-                for y in range(b_a, face_image.height() - b_a):
-                    for x in range(b_a, face_image.width() - b_a):
-                        if (x+ b_a/2)%b_a == 0 or (y+ b_a/2)%b_a == 0:
-                            cur = QColor.fromRgb(blurred_image.pixel(x, y))
-                        else: 
-                            blurred_image.setPixel(x, y, qRgb(cur.red(), cur.green(), cur.blue()))
-                           #set pixel to cur 
-                        #avg = [0.0, 0.0, 0.0]
-                        #count = 0
-                        #for i in range(-8, 8):
-                         #   for j in range(-8, 8):
-                          #      color = QColor.fromRgb(blurred_image.pixel(x + i, y + j))
-                           #     avg[0] += color.red()
-                            #    avg[1] += color.green()
-                             #   avg[2] += color.blue()
-                              #  count += 1
-                        
-                
-                #"pull just the face from the image"
+        for face in faces:
+            tuples = face.getPosition()
+            rect = [tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]]
+            for icon_name in face.attachedObjects:
+                overlay = QPixmap(os.path.join("icons", icon_name))
+                overlay_copy = overlay.copy()
+                width = rect[2]-rect[0]
+                height = rect[3]-rect[1]
+                if icon_name == "yellow-sunglasses.png":
+                    overlay_copy = overlay_copy.scaledToWidth(width)
+                    amount_to_go_down = height/4.5
+                    painter.drawPixmap(rect[0], rect[1] + amount_to_go_down, overlay_copy)
+                elif icon_name == "mustache.png":
+                    overlay_copy = overlay_copy.scaledToWidth(width/2.0)
+                    amount_to_go_down = 3.0*height/5.0
+                    painter.drawPixmap(rect[0]+width/4.0, rect[1] + amount_to_go_down, overlay_copy)
+                elif icon_name == "purplehat.png":
+                    overlay_copy = overlay_copy.scaledToWidth(width*2)
+                    amount_to_go_down = -3.0*height/5.0
+                    painter.drawPixmap(rect[0]-width/2.25, rect[1] + amount_to_go_down, overlay_copy)
+                elif icon_name == "groucho_glasses.png":
+                    overlay_copy = overlay_copy.scaledToWidth(width)
+                    amount_to_go_down = 0
+                    painter.drawPixmap(rect[0], rect[1] + amount_to_go_down, overlay_copy)
+                elif icon_name == "blurry.jpg":
+                    face_image = base.copy(rect[0]+5, rect[1]-10, width-10, height+20).toImage()
+                    blurred_image = face_image.copy()
+                    b_a = width/12
+                    cur = QColor.fromRgb(blurred_image.pixel(b_a/2, b_a/2))
+                    for y in range(b_a, face_image.height() - b_a):
+                        for x in range(b_a, face_image.width() - b_a):
+                            if (x+ b_a/2)%b_a == 0 or (y+ b_a/2)%b_a == 0:
+                                cur = QColor.fromRgb(blurred_image.pixel(x, y))
+                            else: 
+                                blurred_image.setPixel(x, y, qRgb(cur.red(), cur.green(), cur.blue()))
                 
                 
-                
-                blurred_pixmap = QPixmap.fromImage(blurred_image)
-                painter.drawPixmap(rect[0], rect[1], blurred_pixmap)
-            else:
-                print "Not implemeneted yet"
-        
+
+                    blurred_pixmap = QPixmap.fromImage(blurred_image)
+                    painter.drawPixmap(rect[0], rect[1], blurred_pixmap)
+                else:
+                    print "Not implemeneted yet"
+
         # Redraws image
         self.pixmap = result
         self.grid.removeWidget(self.piclabel)
@@ -397,7 +390,7 @@ class GuiWindow(QWidget):
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
                 
-            self.leftbox.set_image(pixmap)
+            self.leftbox.set_image(pixmap, self.face_list)
             self.rightbox.setFaces(face_pics, self.face_list)
             
             self.setLayout(grid)
@@ -412,12 +405,11 @@ class GuiWindow(QWidget):
         
         # Make this actually work! Should alter face objects to add the new "thing", then 
         # need to change code in ImageBox or GuiWindow.draw() to draw things on faces
-        for face_id in checked_faces:
-            face = "the face that corresponds with that id from self.face_list"
+        for face in checked_faces:
             face.addAttachedObject(button_name)
         
         # Old code: drew on image
-        #self.leftbox.draw_object(checked_boxes,button_name)
+        self.leftbox.draw_objects(checked_faces)
         
         # 
         

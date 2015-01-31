@@ -47,9 +47,11 @@ class Video:
 			self.cleanThresh = variableList[6]
 			self.usingTime = variableList[7]
 
-
+	def getVisibleFaces(self):
+		return self.visibleFaceList 
+    
 	def getFaces(self):
-		return self.visibleFaceList
+		return self.visibleFaceList + self.notVisibleFaceList 
 
 	def getCurrentFrame(self):
 		return self.frameImage
