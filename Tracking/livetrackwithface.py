@@ -2,22 +2,26 @@ import cv2
 import os
 from newVid import Video
 
-			# # Always between 0 and 1
-			# self.velocityWeight = variableList[0]
-			# self.scoreWeight = variableList[1]
-			# self.minRemovalScore = variableList[2]
-			# # Maybe larger than one
-			# self.radiusSize = variableList[3]
-			# # Probably always larger than one
-			# self.timeOut = variableList[4]
-			# self.frameGap = variableList[5]
-			# self.cleanThresh = variableList[6]
-			# self.usingTime = variableList[7]
-            # self.binNum = variableList[8]
+	# # Always between 0 and 1
+	# self.minRemovalScore = variableList[0]
+	# # Probably always larger than one
+	# self.timeOut = variableList[1]
+	# self.cleanThresh = variableList[2]
+	# self.binNum = variableList[3]
+	# self.weights = (variableList[4], variableList[5], variableList[6])
 
 def goGetEm():
+	minRemovalScore = 0.0001
+	timeOut = 10
+	cleanThresh = 5
+	binNumber = 100
+	distanceWeight = 1
+	timeWeight = 1
+	sizeWeight = 1
+	weights = (distanceWeight, timeWeight, sizeWeight)
+	variables = [minRemovalScore, timeOut, cleanThresh, binNumber, weights]
 	#vid = Video("Slightmovement.MP4", [0,1,0.1,0.1,1000,0])
-	vid = Video(0, [1,1,0.01,0.5,100,0, 20, True, 100])
+	vid = Video(0, variables)
 	while (True):
 		vid.readFrame()
 		vid.findFaces()

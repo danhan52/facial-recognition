@@ -16,7 +16,6 @@ class Video:
 		self.totalFaceCount = 0		    # number of total faces seen so far
 		self.faceIDCount = 0
 		self.frameCount = 0			    # counter to determine when to detect
-		# PERHAPS SUBCLASS?
 		self.frameImage = None          # this is whatever kind of image returned by openCV
 		self.previousFrame = None
 		self.showWindow = showWindow
@@ -26,31 +25,21 @@ class Video:
 		#####TWEAKABLE VARIABLES#####
 		if variableList == []:
 			# Always between 0 and 1
-			self.velocityWeight = 0
-			self.scoreWeight = 1
 			self.minRemovalScore = 0.1
-			# Maybe larger than one
-			self.radiusSize = 0.5
 			# Probably always larger than one
 			self.timeOut = 15
-			self.frameGap = 0
 			self.cleanThresh = 5
-			self.usingTime = True
 			self.binNum = 100
+			self.weights = (1,1,1)
 		# add a catch statement for if variable list isn't of length 6
 		else:
 			# Always between 0 and 1
-			self.velocityWeight = variableList[0]
-			self.scoreWeight = variableList[1]
-			self.minRemovalScore = variableList[2]
-			# Maybe larger than one
-			self.radiusSize = variableList[3]
+			self.minRemovalScore = variableList[0]
 			# Probably always larger than one
-			self.timeOut = variableList[4]
-			self.frameGap = variableList[5]
-			self.cleanThresh = variableList[6]
-			self.usingTime = variableList[7]
-			self.binNum = variableList[8]
+			self.timeOut = variableList[1]
+			self.cleanThresh = variableList[2]
+			self.binNum = variableList[3]
+			self.weights = (variableList[4][0], variableList[4][1], variableList[4][2])
 
 
 	def getFaces(self):
@@ -73,7 +62,7 @@ class Video:
 			i += 1
 
 	def addNewFace(self, location):
-		fc = Face()
+		fc = Face(self.weights)
 		fc.setID(self.faceIDCount)
 		self.totalFaceCount += 1
 		self.faceIDCount += 1
@@ -84,10 +73,10 @@ class Video:
 		tupList = []
 		for i in range(len(rects)):
 			for j in range(len(self.visibleFaceList)):
-				newPle = (self.scoreForBeingHere(self.visibleFaceList[j],rects[i]), 0, j, i)
+				newPle = (self.visibleFaceList[j].scoreForBeingHere(rects[i]), 0, j, i)
 				tupList.append(newPle)
 			for j in range(len(self.notVisibleFaceList)):
-				newPle = (self.scoreForBeingHere(self.notVisibleFaceList[j],rects[i]), 1, j, i)
+				newPle = (self.notVisibleFaceList[j].scoreForBeingHere(rects[i]), 1, j, i)
 				tupList.append(newPle)
 		return tupList
 
@@ -151,40 +140,6 @@ class Video:
 					print "Make new face"
 					self.addNewFace(rects[i])
 
-		
-	def scoreForBeingHere(self, face1, rect):
-		"""compares face and rect to sees what the chances are that they are the same
-		returns float between 0 and 1"""
-		time = dt.datetime.now()
-		recentPosition = face1.getPosition()
-		if not (recentPosition==[]):
-			deltaTime = (time - recentPosition[2]).total_seconds()
-			velocity = face1.getVelocity()
-			area = math.pow(face1.getArea(),0.5)
-			if self.usingTime:
-				# radius = deltaTime*area*self.radiusSize
-				radius = area*self.radiusSize
-			else:
-				radius = area*self.radiusSize
-			middleOfRect = ((rect[2]+rect[0])/2,(rect[3]+rect[1])/2)
-			middleOfFace = ((recentPosition[1][0]+recentPosition[0][0])/2,(recentPosition[1][1]+recentPosition[0][1])/2)
-			# if velocity != 0:
-			# 	middleOfFace = (middleOfFace[0] + velocity[0]/velocity[2]*deltaTime*self.velocityWeight, middleOfFace[1] + velocity[1]/velocity[2]*deltaTime*self.velocityWeight)
-			diffMiddles = math.pow(math.pow(middleOfFace[0]-middleOfRect[0], 2) + math.pow(middleOfFace[1]-middleOfRect[1], 2), 0.5)
-			
-			# asymptote equation such that after the difference in middles is more than 1 radius away,
-			# prob will be down to 0.25 but after that it slowly goes to 0 never quite reaching it
-			x = math.pow(diffMiddles/radius,3)
-			t = math.pow(deltaTime,2)
-			# decays with increase in time
-			if self.usingTime:
-				score = self.scoreWeight/(t*(3*x+1))
-			else:
-				score = self.scoreWeight/((3*x+1))
-			return score
-		else:
-			return 0
-
 
 	def findFaces(self):
 		"""detects all faces with the frame then analyzes the frame to determine
@@ -223,7 +178,8 @@ class Video:
 		while i < len(self.notVisibleFaceList):
 			if len(self.notVisibleFaceList[i].prevPositions) < self.cleanThresh:
 				self.notVisibleFaceList.pop(i)
-				self.faceIDCount -= 1
+				self.totalFaceCount -= 1
+				print "Deleted ghost face"
 			i += 1
 
 
