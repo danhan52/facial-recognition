@@ -44,7 +44,7 @@ class Video:
 
 	def getFaces(self):
 		allFaceList = self.visibleFaceList + self.notVisibleFaceList
-		mergeSortFaces(allFaceList)
+		mergeSortFaces(self.visibleFaceList)
 		return allFaceList
 
 	def getCurrentFrame(self):
@@ -124,6 +124,7 @@ class Video:
 			while count < len(self.visibleFaceList):
 				if (count not in usedVisibleFaces):
 					face = self.visibleFaceList.pop(count)
+					face.setObscured(True)
 					self.notVisibleFaceList.append(face)
 				else:
 					count += 1
@@ -133,6 +134,7 @@ class Video:
 				if (i in usedNotVisibleFaces):
 					print "Not visible to visible"
 					face = self.notVisibleFaceList.pop(i)
+					face.setObscured(False)
 					self.visibleFaceList.append(face)
 			# create new faces for all unmatched rects
 			for i in range(len(rects)):

@@ -89,9 +89,12 @@ class Face:
 		"""Use velocity and most recent position
 		to calculate a new slightly modified position. Meant for when
 		we are estimating where the face is"""
-		self.prevPositions.append(self.position)
-		self.position[0]
-		pass
+		deltaTime = (time - self.position[2]).total_seconds()
+		self.getVelocity()
+		middleOfFace = ((self.position[1][0]+self.position[0][0])/2,(self.position[1][1]+self.position[0][1])/2)
+		if velocity != 0:
+			middleOfFace = (middleOfFace[0] + velocity[0]/velocity[2]*deltaTime*self.velocityWeight, middleOfFace[1] + velocity[1]/velocity[2]*deltaTime*self.velocityWeight)	
+		return middleOfFace
 
 	def getVelocity(self):
 		"""Use last detected position and most recent detected position
