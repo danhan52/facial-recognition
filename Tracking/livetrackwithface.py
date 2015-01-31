@@ -16,32 +16,17 @@ from newVid import Video
             # self.binNum = variableList[8]
 
 def goGetEm():
-	# vid = Video("facepic3.jpg")
-	# isVid = False
 	#vid = Video("Slightmovement.MP4", [0,1,0.1,0.1,1000,0])
 	vid = Video(0, [1,1,0.01,0.5,100,0, 20, True, 100])
-	isVid = True
-	# vid.readFrame()
-	if isVid==True:
-		while (True):
-			vid.readFrame()
-			vid.findFaces()
-			vid.display()
-			# vid.clean()
-			# exit on escape key
-			key = cv2.waitKey(20)
-			if key == 27:
-				break
-		vid.endWindow()
-	else:
+	while (True):
 		vid.readFrame()
 		vid.findFaces()
 		vid.display()
-		while (True):
-			key = cv2.waitKey(20)
-			if key == 27:
-				break
-
+		# exit on escape key
+		key = cv2.waitKey(20)
+		if key == 27:
+			break
+	vid.endWindow()
 
 
 goGetEm()

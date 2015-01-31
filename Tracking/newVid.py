@@ -3,7 +3,8 @@ import datetime as dt
 import cv2
 import os
 from face import Face
-from colorImport import *
+from sortings import *
+# from colorImport import *
 
 class Video:
 	def __init__(self, vidSource, variableList=[], showWindow=True):
@@ -13,8 +14,8 @@ class Video:
 		self.notVisibleFaceList = []
 		self.inactiveFaceList = []
 		self.totalFaceCount = 0		    # number of total faces seen so far
+		self.faceIDCount = 0
 		self.frameCount = 0			    # counter to determine when to detect
-		self.cleanThresh = 0
 		# PERHAPS SUBCLASS?
 		self.frameImage = None          # this is whatever kind of image returned by openCV
 		self.previousFrame = None
@@ -53,7 +54,9 @@ class Video:
 
 
 	def getFaces(self):
-		return self.visibleFaceList
+		allFaceList = self.visibleFaceList + self.notVisibleFaceList
+		mergeSortFaces(allFaceList)
+		return allFaceList
 
 	def getCurrentFrame(self):
 		return self.frameImage
@@ -71,8 +74,9 @@ class Video:
 
 	def addNewFace(self, location):
 		fc = Face()
-		fc.setID(self.totalFaceCount)
+		fc.setID(self.faceIDCount)
 		self.totalFaceCount += 1
+		self.faceIDCount += 1
 		fc.setPosition(location)
 		self.visibleFaceList.append(fc)
 
@@ -101,7 +105,7 @@ class Video:
 				if scoreList[count][0] < self.minRemovalScore:
 					scoreList.pop(count)
 				count += 1
-			self.mergeSort(scoreList)
+			mergeSortScore(scoreList)
 			# tools for remembering
 			usedRects = []
 			usedVisibleFaces = []
@@ -147,35 +151,6 @@ class Video:
 					print "Make new face"
 					self.addNewFace(rects[i])
 
-
-	def mergeSort(self, alist):
-		if len(alist)>1:
-			mid = len(alist)//2
-			lefthalf = alist[:mid]
-			righthalf = alist[mid:]
-			self.mergeSort(lefthalf)
-			self.mergeSort(righthalf)
-
-			i=0
-			j=0
-			k=0
-			while i<len(lefthalf) and j<len(righthalf):
-				if lefthalf[i][0]>righthalf[j][0]:
-					alist[k]=lefthalf[i]
-					i=i+1
-				else:
-					alist[k]=righthalf[j]
-					j=j+1
-				k=k+1
-			while i<len(lefthalf):
-				alist[k]=lefthalf[i]
-				i=i+1
-				k=k+1
-			while j<len(righthalf):
-				alist[k]=righthalf[j]
-				j=j+1
-				k=k+1
-
 		
 	def scoreForBeingHere(self, face1, rect):
 		"""compares face and rect to sees what the chances are that they are the same
@@ -220,6 +195,7 @@ class Video:
 		else:
 			rects[:, 2:] += rects[:, :2]
 		self.analyzeFrame(rects)
+		self.clean()
 		#self.setAllColorProfiles()
     
 	def setAllColorProfiles(self):
@@ -247,7 +223,7 @@ class Video:
 		while i < len(self.notVisibleFaceList):
 			if len(self.notVisibleFaceList[i].prevPositions) < self.cleanThresh:
 				self.notVisibleFaceList.pop(i)
-				self.totalFaceCount -= 1
+				self.faceIDCount -= 1
 			i += 1
 
 
