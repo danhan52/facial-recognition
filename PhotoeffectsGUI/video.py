@@ -13,6 +13,7 @@ class Video:
 		self.inactiveFaceList = []
 		self.totalFaceCount = 0		    # number of total faces seen so far
 		self.frameCount = 0			    # counter to determine when to detect
+		self.cleanThresh = 0
 		# PERHAPS SUBCLASS?
 		self.frameImage = None          # this is whatever kind of image returned by openCV
 		self.showWindow = showWindow
@@ -30,6 +31,8 @@ class Video:
 			# Probably always larger than one
 			self.timeOut = 15
 			self.frameGap = 0
+			self.cleanThresh = 5
+			self.usingTime = True
 		# add a catch statement for if variable list isn't of length 6
 		else:
 			# Always between 0 and 1
@@ -41,138 +44,135 @@ class Video:
 			# Probably always larger than one
 			self.timeOut = variableList[4]
 			self.frameGap = variableList[5]
+			self.cleanThresh = variableList[6]
+			self.usingTime = variableList[7]
 
 
 	def getFaces(self):
-		return self.visibleFaceList + self.notVisibleFaceList
+		return self.visibleFaceList
 
 	def getCurrentFrame(self):
 		return self.frameImage
 
 	def pruneFaceList(self):
-		# for i in range(len(self.notVisibleFaceList)):
 		i = 0
 		while i < len(self.notVisibleFaceList):
 			pos = self.notVisibleFaceList[i].getPosition()
 			timeSinceDetection = dt.datetime.now()-pos[2]
 			if timeSinceDetection.total_seconds() > self.timeOut:
 				print timeSinceDetection.total_seconds()
-				print self.notVisibleFaceList[i].id
+				print self.notVisibleFaceList[i].getID()
 				self.inactiveFaceList.append(self.notVisibleFaceList.pop(i))
 			i += 1
 
-	def listHelper(self, listChoice, rects):
-		megaList = []
-		for i in range(len(listChoice)):
-			tempList = []
-			for j in range(len(rects)):
-				tempList.append(self.scoreForBeingHere(listChoice[i],rects[j]))
-			# if there are issues, it's with copying
-			megaList.append(list(tempList))
-		return megaList
-
-	def analyzeFrame(self,rects):
-		self.pruneFaceList()
-		if len(rects)>len(self.visibleFaceList):
-			megaList = self.listHelper(self.visibleFaceList,rects)
-
-			assignmentList = []
-			for i in range(len(megaList)):
-				highest = 0
-				index = 0
-				for j in range(len(megaList[i])):
-					if megaList[i][j] >= highest:
-						index = j
-						highest = megaList[i][j]
-				assignmentList.append(index)
-
-			self.makeAssignments(assignmentList, rects)
-
-			notList = self.listHelper(self.notVisibleFaceList,rects)
-
-			if notList != []:
-				for i in range(len(rects)):
-					if i not in assignmentList:
-						index = 0
-						highest = 0
-						for j in range(len(self.notVisibleFaceList)):
-							# print notList
-							if notList[j][i] > highest:
-								index = j
-								highest = notList[j][i]
-						if notList[index][i] > self.minRemovalScore:
-							face = self.notVisibleFaceList.pop(index)
-							face.setPosition(rects[i])
-							self.visibleFaceList.append(face)
-						else:
-							fc = Face()
-							fc.id = self.totalFaceCount
-							# print fc.id
-							self.totalFaceCount += 1
-							fc.setPosition(rects[i])
-							self.visibleFaceList.append(fc)
-			else:
-				for i in range(len(rects)):
-					fc = Face()
-					fc.id = self.totalFaceCount
-					# print fc.id
-					self.totalFaceCount += 1
-					fc.setPosition(rects[i])
-					self.visibleFaceList.append(fc)
-
-
-		elif len(rects)==len(self.visibleFaceList):
-			megaList = self.listHelper(self.visibleFaceList,rects)
-
-			assignmentList = []
-			for i in range(len(megaList)):
-				highest = 0
-				index = 0
-				for j in range(len(megaList[i])):
-					if megaList[i][j] >= highest:
-						index = j
-						highest = megaList[i][j]
-				assignmentList.append(index)
-			
-			self.makeAssignments(assignmentList, rects)
-
-		else:
-			# less rects than faces
-			megaList = self.listHelper(self.visibleFaceList,rects)
-
-			assignmentList = []
-			probabilityList = []
-			for i in range(len(megaList)):
-				highest = 0
-				index = 0
-				for j in range(len(megaList[i])):
-					if megaList[i][j] >= highest:
-						index = j
-						highest = megaList[i][j]
-				assignmentList.append(index)
-				probabilityList.append(highest)
-
-			lowIndex = probabilityList.index(min(probabilityList))
-			self.notVisibleFaceList.append(self.visibleFaceList.pop(lowIndex))
-			assignmentList.pop(lowIndex)
-			self.makeAssignments(assignmentList, rects)
-
-
-
-
-	def makeAssignments(self, assignmentList, rects):
-		# print len(self.visibleFaceList)
-		for i in range(len(self.visibleFaceList)):
-			if rects != []:
-				self.visibleFaceList[i].setPosition(rects[assignmentList[i]])
-
-
-	#we can probably remove this
-	def addNewFace(self, fc):
-		"""analyzes movement of a new face to preserve effeciency"""
+	def addNewFace(self, location):
+		fc = Face()
+		fc.setID(self.totalFaceCount)
+		self.totalFaceCount += 1
+		fc.setPosition(location)
 		self.visibleFaceList.append(fc)
 
+	def listHelper(self, rects):
+		tupList = []
+		for i in range(len(rects)):
+			for j in range(len(self.visibleFaceList)):
+				newPle = (self.scoreForBeingHere(self.visibleFaceList[j],rects[i]), 0, j, i)
+				tupList.append(newPle)
+			for j in range(len(self.notVisibleFaceList)):
+				newPle = (self.scoreForBeingHere(self.notVisibleFaceList[j],rects[i]), 1, j, i)
+				tupList.append(newPle)
+		return tupList
 
+
+	def analyzeFrame(self, rects):
+		if (len(self.visibleFaceList)<1 and len(self.notVisibleFaceList)<1):
+			for i in range(len(rects)):
+				self.addNewFace(rects[i])
+		else:
+			self.pruneFaceList()
+			scoreList = self.listHelper(rects)
+			# remove all scores that aren't high enough
+			count = 0
+			while(count < len(scoreList)):
+				if scoreList[count][0] < self.minRemovalScore:
+					scoreList.pop(count)
+				count += 1
+			self.mergeSort(scoreList)
+			# tools for remembering
+			usedRects = []
+			usedVisibleFaces = []
+			usedNotVisibleFaces = []
+			# set positions for optimum rects and faces (visible and not)
+			for i in range(len(scoreList)):
+				ur = scoreList[i][3] not in usedRects
+				if scoreList[i][1]==0:
+					uvf = scoreList[i][2] not in usedVisibleFaces
+					if (ur and uvf):
+						faceInd = scoreList[i][2]
+						rectInd = scoreList[i][3]
+						self.visibleFaceList[faceInd].setPosition(rects[rectInd])
+						usedRects.append(rectInd)
+						usedVisibleFaces.append(faceInd)
+				else:
+					unvf = scoreList[i][2] not in usedNotVisibleFaces
+					if (ur and unvf):
+						faceInd = scoreList[i][2]
+						rectInd = scoreList[i][3]
+						self.notVisibleFaceList[faceInd].setPosition(rects[rectInd])
+						usedRects.append(rectInd)
+						usedNotVisibleFaces.append(faceInd)
+
+			# all unmatched visible faces should be moved to notVisibleFaceList
+			count = 0
+			while count < len(self.visibleFaceList):
+				if (count not in usedVisibleFaces):
+					face = self.visibleFaceList.pop(count)
+					self.notVisibleFaceList.append(face)
+				else:
+					count += 1
+			# all matched not visible faces should be moved to visibleFaceList
+			notVisLen = len(self.notVisibleFaceList)
+			for i in reversed(range(notVisLen)):
+				if (i in usedNotVisibleFaces):
+					print "Not visible to visible"
+					face = self.notVisibleFaceList.pop(i)
+					self.visibleFaceList.append(face)
+			# create new faces for all unmatched rects
+			for i in range(len(rects)):
+				if (i not in usedRects):
+					print "Make new face"
+					self.addNewFace(rects[i])
+
+
+	def mergeSort(self, alist):
+		if len(alist)>1:
+			mid = len(alist)//2
+			lefthalf = alist[:mid]
+			righthalf = alist[mid:]
+			self.mergeSort(lefthalf)
+			self.mergeSort(righthalf)
+
+			i=0
+			j=0
+			k=0
+			while i<len(lefthalf) and j<len(righthalf):
+				if lefthalf[i][0]>righthalf[j][0]:
+					alist[k]=lefthalf[i]
+					i=i+1
+				else:
+					alist[k]=righthalf[j]
+					j=j+1
+				k=k+1
+			while i<len(lefthalf):
+				alist[k]=lefthalf[i]
+				i=i+1
+				k=k+1
+			while j<len(righthalf):
+				alist[k]=righthalf[j]
+				j=j+1
+				k=k+1
+
+		
 	def scoreForBeingHere(self, face1, rect):
 		"""compares face and rect to sees what the chances are that they are the same
 		returns float between 0 and 1"""
@@ -182,46 +182,29 @@ class Video:
 			deltaTime = (time - recentPosition[2]).total_seconds()
 			velocity = face1.getVelocity()
 			area = math.pow(face1.getArea(),0.5)
-			radius = deltaTime*area*self.radiusSize
+			if self.usingTime:
+				# radius = deltaTime*area*self.radiusSize
+				radius = area*self.radiusSize
+			else:
+				radius = area*self.radiusSize
 			middleOfRect = ((rect[2]+rect[0])/2,(rect[3]+rect[1])/2)
 			middleOfFace = ((recentPosition[1][0]+recentPosition[0][0])/2,(recentPosition[1][1]+recentPosition[0][1])/2)
-			if velocity != 0:
-				middleOfFace = (middleOfFace[0] + velocity[0]/velocity[2]*deltaTime*self.velocityWeight, middleOfFace[1] + velocity[1]/velocity[2]*deltaTime*self.velocityWeight)
+			# if velocity != 0:
+			# 	middleOfFace = (middleOfFace[0] + velocity[0]/velocity[2]*deltaTime*self.velocityWeight, middleOfFace[1] + velocity[1]/velocity[2]*deltaTime*self.velocityWeight)
 			diffMiddles = math.pow(math.pow(middleOfFace[0]-middleOfRect[0], 2) + math.pow(middleOfFace[1]-middleOfRect[1], 2), 0.5)
 			
-
 			# asymptote equation such that after the difference in middles is more than 1 radius away,
 			# prob will be down to 0.25 but after that it slowly goes to 0 never quite reaching it
 			x = math.pow(diffMiddles/radius,3)
+			t = math.pow(deltaTime,2)
 			# decays with increase in time
-			constant = 1
-			score = self.scoreWeight/(deltaTime*(3*x+1))
+			if self.usingTime:
+				score = self.scoreWeight/(t*(3*x+1))
+			else:
+				score = self.scoreWeight/((3*x+1))
 			return score
 		else:
 			return 0
-
-
-	def readFrame(self):
-		"""read frame from openCV info"""
-		success, self.frameImage = self.vidcap.read()
-		return success, self.frameImage
-
-
-	def detectAll(self):
-		"""Run face detection algorithm on the whole picture and make adjustments 
-		to the faces based on where the are and where they should be"""
-		rects = self.cascade.detectMultiScale(self.frameImage, 1.3, 4, cv2.cv.CV_HAAR_SCALE_IMAGE, (20,20))
-		return rects
-
-
-	# # won't really ever use
-	# def estimateAll(self):
-	# 	"""Step forward one frame, update all (visible?) faces based on estimation 
-	# 	from velocities; don't run face detection algorithm
-	# 	Should be run every frame except where detectAll() is run."""
-	# 	pass
-	# 	# for face in self.visibleFaceList[]:
-	# 	# 	face.estimateNextPosition()
 
 
 	def findFaces(self):
@@ -235,17 +218,33 @@ class Video:
 		self.analyzeFrame(rects)
 
 
+	def detectAll(self):
+		"""Run face detection algorithm on the whole picture and make adjustments 
+		to the faces based on where the are and where they should be"""
+		rects = self.cascade.detectMultiScale(self.frameImage, 1.3, 4, cv2.cv.CV_HAAR_SCALE_IMAGE, (20,20))
+		return rects
+
+
 	def display(self):
 		""" Displays current frame with rectangles and boxes"""
-		# print len(self.visibleFaceList)
-		print "not visible: "
-		for face in self.notVisibleFaceList:
-			print face.id
-		print "visibel: "
 		for i in range(len(self.visibleFaceList)):
-			print self.visibleFaceList[i].id
-			self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].id)
+			self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].getID())
 		cv2.imshow("show", self.frameImage)
+
+
+	def clean(self):
+		i = 0
+		while i < len(self.notVisibleFaceList):
+			if len(self.notVisibleFaceList[i].prevPositions) < self.cleanThresh:
+				self.notVisibleFaceList.pop(i)
+				self.totalFaceCount -= 1
+			i += 1
+
+
+	def readFrame(self):
+		"""read frame from openCV info"""
+		success, self.frameImage = self.vidcap.read()
+		return success, self.frameImage
 
 
 	def showRectangle(self, pos, IDnum):
