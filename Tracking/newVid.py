@@ -44,7 +44,7 @@ class Video:
 
 	def getFaces(self):
 		allFaceList = self.visibleFaceList + self.notVisibleFaceList
-		mergeSortFaces(self.visibleFaceList)
+		mergeSortFaces(allFaceList)
 		return allFaceList
 
 	def getCurrentFrame(self):
@@ -170,6 +170,10 @@ class Video:
 
 	def display(self):
 		""" Displays current frame with rectangles and boxes"""
+		allface = self.getFaces()
+		for i in range(len(allface)):
+			print allface[i].getID(), " ",
+		print
 		for i in range(len(self.visibleFaceList)):
 			self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].getID())
 		cv2.imshow("show", self.frameImage)

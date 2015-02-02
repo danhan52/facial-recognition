@@ -38,7 +38,7 @@ def mergeSortFaces(alist):
 			j=0
 			k=0
 			while i<len(lefthalf) and j<len(righthalf):
-				if lefthalf[i].getID()>righthalf[j].getID():
+				if lefthalf[i].getID()<righthalf[j].getID():
 					alist[k]=lefthalf[i]
 					i=i+1
 				else:
