@@ -47,6 +47,9 @@ class Video:
 		mergeSortFaces(allFaceList)
 		return allFaceList
 
+#	def getFaces(self):
+#		return self.visibleFaceList
+    
 	def getCurrentFrame(self):
 		return self.frameImage
 

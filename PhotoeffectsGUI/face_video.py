@@ -15,6 +15,8 @@ sys.path.append("/Users/Katja/COMPS/facial-recognition/Tracking")
 from video import Video
 import cv2, cv
 import time
+from random import *
+from subprocess import call
 #from PIL import Image
 
 
@@ -78,12 +80,14 @@ class AddOptions(QWidget):
 
         count = 0
         for img in os.listdir("icons"):
-            imgPath = os.path.join("icons", img)
-            button = PictureButton(imgPath,self.window)
-            grid.addWidget(button, count/4, count % 4)
-            button.clicked.connect(button.click)
-            count+=1
-        #print count
+            if img[0:2] != "._":
+                imgPath = os.path.join("icons", img)
+                button = PictureButton(imgPath,self.window)
+                grid.addWidget(button, count/4, count % 4)
+                button.clicked.connect(button.click)
+                count+=1
+                print img
+        print count
 
         self.setLayout(grid)
 
@@ -123,12 +127,16 @@ class FaceOptions(QWidget):
         self.faces = faces
         self.face_pics = face_pics
         
+#        self.face_ids_new = [f.getID() for f in self.faces if not f.obscured]
+#        print "old vs. new face_IDS:", self.face_ids_new
         self.face_ids = [f.getID() for f in self.faces]
         print "old vs. new face_IDS:", self.old_face_ids, self.face_ids
         print "checked boxes:", [c.isChecked() for c in self.checkboxes]
         if set(self.old_face_ids) != set(self.face_ids):
             self.draw()
 #        self.draw()
+#        if set(self.old_face_ids) != set(self.face_ids_new):
+#            self.draw()
 
 
     def draw(self):
@@ -166,7 +174,7 @@ class FaceOptions(QWidget):
             
         self.old_face_ids = [f.getID() for f in self.faces]
         #print self.old_face_IDs
-
+        #self.old_face_ids = [f.getID() for f in self.faces if not f.obscured]
         self.setLayout(self.grid)
     
     def deleteAll(self):
@@ -259,13 +267,15 @@ class ImageBox(QWidget):
         self.piclabel = QLabel()
         self.grid = QGridLayout()
         self.pixmap = None
+        self.face_pics = []
         #self.draw()
         #self.faces = []
         
-    def set_image(self, img, faces):
+    def set_image(self, img, faces, face_pics):
         #self.pixmap = QPixmap(img)
         self.pixmap = img
         self.draw_objects(faces)
+        self.face_pics = face_pics
         
     def draw(self):
         self.piclabel.setPixmap(self.pixmap)
@@ -278,8 +288,13 @@ class ImageBox(QWidget):
         self.grid.addWidget(self.piclabel,0,0,1,3)
         
         button = QPushButton("Screenshot")
+        button.clicked.connect(self.take_screenshot)
         self.grid.addWidget(button,1,1)
         self.setLayout(self.grid)
+        
+    def take_screenshot(self):
+        print "Taking screenshot!"
+        call(["screencapture", "screenshot2.jpg"])
         
     def draw_objects(self,faces):
         '''Redraws main image to include clicked item/effect for given faces.'''
@@ -326,11 +341,18 @@ class ImageBox(QWidget):
                                 cur = QColor.fromRgb(blurred_image.pixel(x, y))
                             else: 
                                 blurred_image.setPixel(x, y, qRgb(cur.red(), cur.green(), cur.blue()))
-                
-                
-
                     blurred_pixmap = QPixmap.fromImage(blurred_image)
                     painter.drawPixmap(rect[0], rect[1], blurred_pixmap)
+                elif icon_name == "trashcan.png":
+                    for face in faces:
+                        face.attachedObjects = []       
+                elif icon_name == "faceswap.png": 
+                    index_to_swap = randint(0, len(self.face_pics) - 1)
+                    while index_to_swap == faces.index(face):
+                        index_to_swap = randint(0, len(self.face_pics) - 1)
+                    overlay_copy = QPixmap(self.face_pics[index_to_swap])
+                    overlay_copy = overlay_copy.scaledToWidth(width)
+                    painter.drawPixmap(rect[0], rect[1], overlay_copy)
                 else:
                     print "Not implemeneted yet"
 
@@ -390,7 +412,7 @@ class GuiWindow(QWidget):
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
                 
-            self.leftbox.set_image(pixmap, self.face_list)
+            self.leftbox.set_image(pixmap, self.face_list, face_pics)
             self.rightbox.setFaces(face_pics, self.face_list)
             
             self.setLayout(grid)
