@@ -19,13 +19,20 @@ def goGetEm():
 	timeWeight = 1
 	sizeWeight = 1
 	weights = (distanceWeight, timeWeight, sizeWeight)
-	variables = [minRemovalScore, timeOut, cleanThresh, binNumber, weights]
+	writingToFiles = True
+	variables = [minRemovalScore, timeOut, cleanThresh, binNumber, weights, writingToFiles]
 	#vid = Video("Slightmovement.MP4", [0,1,0.1,0.1,1000,0])
+	vidFile = "outvid.avi"
+	csvFile = "variable.csv"
 	vid = Video(0, variables)
+	if writingToFiles:
+		vid.openVidWrite(vidFile)
+		vid.openCSVWrite(csvFile)
 	while (True):
 		vid.readFrame()
 		vid.findFaces()
 		vid.display()
+		vid.writeToVideo()
 		# exit on escape key
 		key = cv2.waitKey(20)
 		if key == 27:

@@ -32,6 +32,9 @@ class Face:
 	def getPosition(self):
 		return self.position
 
+	def getPrevPositions(self):
+		return self.prevPositions
+
 	def setPosition(self, rects):
 		"""takes list of tuples pos and sets that as position
 		and updates prevPositions. Also sets velocity"""
@@ -54,6 +57,10 @@ class Face:
 			return 0
 		return abs(self.position[1][0]-self.position[0][0])
 
+	def getAge(self):
+		age = (dt.datetime.now()-timeself.prevPositions[0][2]).total_seconds()
+		return age
+		
 	def isObscured(self):
 		return self.obscured
 
