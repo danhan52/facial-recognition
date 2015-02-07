@@ -20,6 +20,7 @@ class Video:
 		self.frameImage = None          # this is whatever kind of image returned by openCV
 		self.previousFrame = None
 		self.showWindow = showWindow
+		self.openCSVWrite("variables.csv")
 
 		if self.showWindow:
 			cv2.namedWindow("show")
@@ -162,6 +163,7 @@ class Video:
 			score = 1/linearScore
 			if self.writing:
 				data = [face.getID(),diffMiddles,diffWidths,deltaTime,score]
+				print data
 				self.writeToCSV(data)
 			return score
 		else:
@@ -248,7 +250,7 @@ class Video:
 	"""Meant for testing"""
 	def openVidWrite(self, filen):
 		fourcc = int(cv2.cv.CV_FOURCC('I', 'Y', 'U', 'V'))
-		fps = 20 		# self.vidcap.get(cv2.cv.CV_CAP_PROP_FPS)
+		fps = 15 		# self.vidcap.get(cv2.cv.CV_CAP_PROP_FPS)
 		framew = int(self.vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
 		frameh = int(self.vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 		self.vidwrite = cv2.VideoWriter()
