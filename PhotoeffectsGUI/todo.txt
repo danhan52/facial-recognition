@@ -1,13 +1,29 @@
 GUI To-Do List:
 
+
+* make small pics work better
+* fix face swap--various
+* improve screenshot (make a window only screenshot)
+~√ fixed-size-across face grid
+
+
+Discuss with Jeff:
+* make less laggy
+
+
+Discuss with others:
+* Mirror image display
 * merge
+* make showVid=False work?
+
+
+Low priority:
+* make play/pause work
+
+
+
+Done! Yay!
 √ danny's variables :D
 √ take out unnecessary draw options
-* make small pics work better
-* make less laggy
-* add numbers as option (on/off)
-* fix face swap--various
-* figure out why same tracking code is always worse when we do it
-* make showVid=False work?
-* make play/pause work
-* improve screenshot (make a window only screenshot)
+√ add numbers as option (on/off)
+√ figure out why same tracking code is always worse when we do it

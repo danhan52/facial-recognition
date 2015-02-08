@@ -18,6 +18,7 @@ import time
 from random import *
 from subprocess import call
 #from PIL import Image
+import numpy
 
 
 class PictureButton(QPushButton):
@@ -169,8 +170,14 @@ class FaceOptions(QWidget):
             self.checkboxes.append(checkbox)
             self.grid.addWidget(checkbox, 3 + 2*(count/3), count % 3, Qt.AlignHCenter)
             count+=1
+            print "?:", count, 3 + 2*(count/3), count % 3
             self.old_face_pics.append(piclabel)
             self.old_checks.append(checkbox)
+            
+        while count % 3 != 0:
+            self.grid.addWidget(QLabel(), 2 + 2*(count/3),count % 3)
+            self.grid.addWidget(QLabel(), 3 + 2*(count/3),count % 3)
+            count+=1
             
         self.old_face_ids = [f.getID() for f in self.faces]
         #print self.old_face_IDs
@@ -235,6 +242,17 @@ class ControlBox(QWidget):
         
         addOptions = AddOptions(self.window)
         self.grid.addWidget(addOptions, 3, 0)
+        
+        num_button = QPushButton()
+        num_button.setSizePolicy (
+            QSizePolicy (
+                QSizePolicy.Expanding,
+                QSizePolicy.Fixed))
+        num_button.setMinimumSize(100, 100)
+        num_button.setIcon(QIcon("numbers.jpg"))
+        num_button.setIconSize(QSize(100, 75))
+        num_button.clicked.connect(self.window.toggle_nums)
+        self.grid.addWidget(num_button,4,0)
         
 #        label = QLabel("Draw")
 #        self.grid.addWidget(label,4,0,Qt.AlignHCenter)
@@ -369,7 +387,9 @@ class GuiWindow(QWidget):
     def __init__(self):
         QWidget.__init__(self)
         self.face_list = []
+        self.draw_nums = False
         self.draw()
+        
         
 
     def draw(self):
@@ -391,8 +411,14 @@ class GuiWindow(QWidget):
             frame_as_string_before = vid.getCurrentFrame().tostring()
             vid.findFaces()
             self.face_list = vid.getFaces()
-            for i in range(len(self.face_list)):
-                vid.showRectangle(self.face_list[i].getPosition(),self.face_list[i].getID())
+            
+            
+            if self.draw_nums:
+                for i in range(len(self.face_list)):
+                    vid.showRectangle(self.face_list[i].getPosition(),self.face_list[i].getID())
+                
+                
+                
             frame = vid.getCurrentFrame()
             
             rects = []
@@ -424,6 +450,9 @@ class GuiWindow(QWidget):
             
             self.setLayout(grid)
             self.show()
+            
+    def toggle_nums(self):
+        self.draw_nums = not self.draw_nums
             
     
 
