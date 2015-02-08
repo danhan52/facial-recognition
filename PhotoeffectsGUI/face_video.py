@@ -236,11 +236,11 @@ class ControlBox(QWidget):
         addOptions = AddOptions(self.window)
         self.grid.addWidget(addOptions, 3, 0)
         
-        label = QLabel("Draw")
-        self.grid.addWidget(label,4,0,Qt.AlignHCenter)
+#        label = QLabel("Draw")
+#        self.grid.addWidget(label,4,0,Qt.AlignHCenter)
         
-        drawOptions = DrawOptions()
-        self.grid.addWidget(drawOptions, 5, 0)
+#        drawOptions = DrawOptions()
+#        self.grid.addWidget(drawOptions, 5, 0)
         
         self.setLayout(self.grid)
         
@@ -307,54 +307,55 @@ class ImageBox(QWidget):
         
         # Draws icon on each face given.
         for face in faces:
-            tuples = face.getPosition()
-            rect = [tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]]
-            for icon_name in face.attachedObjects:
-                overlay = QPixmap(os.path.join("icons", icon_name))
-                overlay_copy = overlay.copy()
-                width = rect[2]-rect[0]
-                height = rect[3]-rect[1]
-                if icon_name == "yellow-sunglasses.png":
-                    overlay_copy = overlay_copy.scaledToWidth(width)
-                    amount_to_go_down = height/4.5
-                    painter.drawPixmap(rect[0], rect[1] + amount_to_go_down, overlay_copy)
-                elif icon_name == "mustache.png":
-                    overlay_copy = overlay_copy.scaledToWidth(width/2.0)
-                    amount_to_go_down = 3.0*height/5.0
-                    painter.drawPixmap(rect[0]+width/4.0, rect[1] + amount_to_go_down, overlay_copy)
-                elif icon_name == "purplehat.png":
-                    overlay_copy = overlay_copy.scaledToWidth(width*2)
-                    amount_to_go_down = -3.0*height/5.0
-                    painter.drawPixmap(rect[0]-width/2.25, rect[1] + amount_to_go_down, overlay_copy)
-                elif icon_name == "groucho_glasses.png":
-                    overlay_copy = overlay_copy.scaledToWidth(width)
-                    amount_to_go_down = 0
-                    painter.drawPixmap(rect[0], rect[1] + amount_to_go_down, overlay_copy)
-                elif icon_name == "blurry.jpg":
-                    face_image = base.copy(rect[0]+5, rect[1]-10, width-10, height+20).toImage()
-                    blurred_image = face_image.copy()
-                    b_a = width/12
-                    cur = QColor.fromRgb(blurred_image.pixel(b_a/2, b_a/2))
-                    for y in range(b_a, face_image.height() - b_a):
-                        for x in range(b_a, face_image.width() - b_a):
-                            if (x+ b_a/2)%b_a == 0 or (y+ b_a/2)%b_a == 0:
-                                cur = QColor.fromRgb(blurred_image.pixel(x, y))
-                            else: 
-                                blurred_image.setPixel(x, y, qRgb(cur.red(), cur.green(), cur.blue()))
-                    blurred_pixmap = QPixmap.fromImage(blurred_image)
-                    painter.drawPixmap(rect[0], rect[1], blurred_pixmap)
-                elif icon_name == "trashcan.png":
-                    for face in faces:
-                        face.attachedObjects = []       
-                elif icon_name == "faceswap.png": 
-                    index_to_swap = randint(0, len(self.face_pics) - 1)
-                    while index_to_swap == faces.index(face):
+            if not face.isObscured():
+                tuples = face.getPosition()
+                rect = [tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]]
+                for icon_name in face.attachedObjects:
+                    overlay = QPixmap(os.path.join("icons", icon_name))
+                    overlay_copy = overlay.copy()
+                    width = rect[2]-rect[0]
+                    height = rect[3]-rect[1]
+                    if icon_name == "yellow-sunglasses.png":
+                        overlay_copy = overlay_copy.scaledToWidth(width)
+                        amount_to_go_down = height/4.5
+                        painter.drawPixmap(rect[0], rect[1] + amount_to_go_down, overlay_copy)
+                    elif icon_name == "mustache.png":
+                        overlay_copy = overlay_copy.scaledToWidth(width/2.0)
+                        amount_to_go_down = 3.0*height/5.0
+                        painter.drawPixmap(rect[0]+width/4.0, rect[1] + amount_to_go_down, overlay_copy)
+                    elif icon_name == "purplehat.png":
+                        overlay_copy = overlay_copy.scaledToWidth(width*2)
+                        amount_to_go_down = -3.0*height/5.0
+                        painter.drawPixmap(rect[0]-width/2.25, rect[1] + amount_to_go_down, overlay_copy)
+                    elif icon_name == "groucho_glasses.png":
+                        overlay_copy = overlay_copy.scaledToWidth(width)
+                        amount_to_go_down = 0
+                        painter.drawPixmap(rect[0], rect[1] + amount_to_go_down, overlay_copy)
+                    elif icon_name == "blurry.jpg":
+                        face_image = base.copy(rect[0]+5, rect[1]-10, width-10, height+20).toImage()
+                        blurred_image = face_image.copy()
+                        b_a = width/12
+                        cur = QColor.fromRgb(blurred_image.pixel(b_a/2, b_a/2))
+                        for y in range(b_a, face_image.height() - b_a):
+                            for x in range(b_a, face_image.width() - b_a):
+                                if (x+ b_a/2)%b_a == 0 or (y+ b_a/2)%b_a == 0:
+                                    cur = QColor.fromRgb(blurred_image.pixel(x, y))
+                                else: 
+                                    blurred_image.setPixel(x, y, qRgb(cur.red(), cur.green(), cur.blue()))
+                        blurred_pixmap = QPixmap.fromImage(blurred_image)
+                        painter.drawPixmap(rect[0], rect[1], blurred_pixmap)
+                    elif icon_name == "trashcan.png":
+                        for face in faces:
+                            face.attachedObjects = []       
+                    elif icon_name == "faceswap.png": 
                         index_to_swap = randint(0, len(self.face_pics) - 1)
-                    overlay_copy = QPixmap(self.face_pics[index_to_swap])
-                    overlay_copy = overlay_copy.scaledToWidth(width)
-                    painter.drawPixmap(rect[0], rect[1], overlay_copy)
-                else:
-                    print "Not implemeneted yet"
+                        while index_to_swap == faces.index(face):
+                            index_to_swap = randint(0, len(self.face_pics) - 1)
+                        overlay_copy = QPixmap(self.face_pics[index_to_swap])
+                        overlay_copy = overlay_copy.scaledToWidth(width)
+                        painter.drawPixmap(rect[0], rect[1], overlay_copy)
+                    else:
+                        print "Not implemeneted yet"
 
         # Redraws image
         self.pixmap = result
@@ -380,24 +381,30 @@ class GuiWindow(QWidget):
         self.rightbox = ControlBox(self)
         grid.addWidget(self.rightbox, 0, 1)
         
-        vid = Video(0)
+        variables = (0.001, 10, 5, 100, (1,1,1), False)
+        vid = Video(0,variables)
+        #vid = Video(0)
         
         while(True):
             vid.readFrame()
             #self.rightbox.setFaces(faces2, rects)
             frame_as_string_before = vid.getCurrentFrame().tostring()
             vid.findFaces()
+            self.face_list = vid.getFaces()
+            for i in range(len(self.face_list)):
+                vid.showRectangle(self.face_list[i].getPosition(),self.face_list[i].getID())
             frame = vid.getCurrentFrame()
             
             rects = []
-            self.face_list = vid.getFaces()
+            #self.face_list = vid.getFaces()
             for face in self.face_list:
                 tuples = face.getPosition()
                 rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
+                print face.getID()
                 
 
             frame_as_string_in_between = frame.tostring()
-            assert frame_as_string_before == frame_as_string_in_between
+            #assert frame_as_string_before == frame_as_string_in_between
 
             cv2.cvtColor(frame, cv.CV_BGR2RGB, frame)
             frame_as_string = frame.tostring()

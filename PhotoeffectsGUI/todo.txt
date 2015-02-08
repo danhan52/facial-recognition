@@ -1,0 +1,13 @@
+GUI To-Do List:
+
+* merge
+√ danny's variables :D
+√ take out unnecessary draw options
+* make small pics work better
+* make less laggy
+* add numbers as option (on/off)
+* fix face swap--various
+* figure out why same tracking code is always worse when we do it
+* make showVid=False work?
+* make play/pause work
+* improve screenshot (make a window only screenshot)
