@@ -15,29 +15,24 @@ def goGetEm():
 	timeOut = 10
 	cleanThresh = 5
 	binNumber = 100
-	distanceWeight = 1
-	timeWeight = 1
-	sizeWeight = 1
+	distanceWeight = 0.4
+	sizeWeight = 0.35
+	timeWeight = 0.25
 	weights = (distanceWeight, timeWeight, sizeWeight)
 	writingToFiles = True
-	variables = [minRemovalScore, timeOut, cleanThresh, binNumber, weights, writingToFiles]
-	# vid = Video("test/curl.MP4", variables)
-	vid = Video(0, variables)
-	# vidFile = "outvid.avi"
-	# csvFile = "variable.csv"
-	# if writingToFiles:
-	# 	vid.openVidWrite(vidFile)
-	# 	vid.openCSVWrite(csvFile)
-	while (True):
-		vid.readFrame()
+	distDev = 204
+	timeDev = 0.34
+	sizeDev = 0.28
+	devs = (distDev, timeDev, sizeDev)
+	variables = [minRemovalScore, timeOut, cleanThresh, binNumber, weights, writingToFiles, devs]
+	vidFile = "outvid.avi"
+	vid = Video("test/part_o.MP4", variables, False)
+	vid.openVidWrite(vidFile)
+	success = vid.readFrame()
+	while (success):
 		vid.findFaces()
-		vid.display()
-		# vid.writeToVideo()
-		# exit on escape key
-		key = cv2.waitKey(20)
-		if key == 27:
-			break
+		vid.writeToVideo()
+		success = vid.readFrame()
 	vid.endWindow()
-
 
 goGetEm()

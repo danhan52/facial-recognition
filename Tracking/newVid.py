@@ -20,7 +20,6 @@ class Video:
 		self.frameImage = None          # this is whatever kind of image returned by openCV
 		self.previousFrame = None
 		self.showWindow = showWindow
-		self.openCSVWrite("variables.csv")
 
 		if self.showWindow:
 			cv2.namedWindow("show")
@@ -34,6 +33,7 @@ class Video:
 			self.binNum = 100
 			self.weights = (1,1,1)
 			self.writing = False
+			self.deviation = (400, 0.5, 0.4)
 		# add a catch statement for if variable list isn't of length 6
 		else:
 			# Always between 0 and 1
@@ -44,6 +44,9 @@ class Video:
 			self.binNum = variableList[3]
 			self.weights = (variableList[4][0], variableList[4][1], variableList[4][2])
 			self.writing = variableList[5]
+			self.deviation = (variableList[6][0], variableList[6][1], variableList[6][2])
+		if self.writing:
+			self.openCSVWrite("variables.csv")
 
 	""" Getters """
 	def getFaces(self):
@@ -154,16 +157,26 @@ class Video:
 			diffWidths = 1.0*abs(width-rectWidth)/width
 			# get position change
 			middleOfRect = ((rect[2]+rect[0])/2,(rect[3]+rect[1])/2)
-			middleOfFace = ((recentPosition[1][0]+recentPosition[0][0])/2,(recentPosition[1][1]+recentPosition[0][1])/2)
-			# if velocity != 0:
-			# 	middleOfFace = (middleOfFace[0] + velocity[0]/velocity[2]*deltaTime*self.velocityWeight, middleOfFace[1] + velocity[1]/velocity[2]*deltaTime*self.velocityWeight)
+			if deltaTime < 0.5:
+				middleOfFace = ((recentPosition[1][0]+recentPosition[0][0])/2,(recentPosition[1][1]+recentPosition[0][1])/2)
+			else:
+				middleOfFace = face.estimateNextPosition(time)
 			diffMiddles = math.pow(math.pow(middleOfFace[0]-middleOfRect[0], 2) + math.pow(middleOfFace[1]-middleOfRect[1], 2), 0.5)
 			
-			linearScore = self.weights[0]*diffMiddles+self.weights[2]*diffWidths+self.weights[1]*deltaTime
-			score = 1/linearScore
+			# asymptote equation such that after the difference in middles is more than 1 radius away,
+			# prob will be down to 0.25 but after that it slowly goes to 0 never quite reaching it
+			xMid = math.pow(diffMiddles/self.deviation[0],3)
+			scoreMid = 1.0/((3*xMid+1))
+			xWidth = math.pow(diffWidths/self.deviation[2],3)
+			scoreWidth = 1.0/((3*xWidth+1))
+			xTime = math.pow(deltaTime/self.deviation[1],3)
+			scoreTime = 1.0/((3*xTime+1))
+			score = self.weights[0]*scoreMid+self.weights[2]*scoreWidth+self.weights[1]*scoreTime
+
+			# linearScore = self.weights[0]*diffMiddles+self.weights[2]*diffWidths+self.weights[1]*deltaTime
+			# score = 1/linearScore
 			if self.writing:
 				data = [face.getID(),diffMiddles,diffWidths,deltaTime,score]
-				print data
 				self.writeToCSV(data)
 			return score
 		else:
@@ -228,7 +241,7 @@ class Video:
 		"""read frame from openCV info"""
 		self.previousFrame = self.frameImage
 		success, self.frameImage = self.vidcap.read()
-		return success, self.frameImage
+		return success
 
 	def display(self):
 		""" Displays current frame with rectangles and boxes"""
@@ -265,7 +278,7 @@ class Video:
 	def openCSVWrite(self, filen):
 		b = open(filen,'wb')
 		self.cwrite = csv.writer(b)
-		headings = ["FaceID", "dPostion", "dWidth", "dTime", "score"]
+		headings = ["FaceID", "dPosition", "dWidth", "dTime", "score"]
 		self.writeToCSV(headings)
 
 	def writeToCSV(self, data):
