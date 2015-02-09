@@ -402,8 +402,8 @@ class GuiWindow(QWidget):
         grid.addWidget(self.rightbox, 0, 1)
         
         variables = (0.001, 10, 5, 100, (1,1,1), False)
+        #vid = Video(0,variables, showWindow=False)
         vid = Video(0,variables)
-        #vid = Video(0)
         
         while(True):
             vid.readFrame()
