@@ -1,10 +1,10 @@
 GUI To-Do List:
 
 
-* make small pics work better
 * fix face swap--various
 * improve screenshot (make a window only screenshot)
 ~√ fixed-size-across face grid
+~√ make small pics work better
 
 
 Discuss with Jeff:
@@ -19,6 +19,7 @@ Discuss with others:
 
 Low priority:
 * make play/pause work
+* GAME (pong? block bouncing?)
 
 
 
