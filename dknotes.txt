@@ -1,0 +1,25 @@
+get pave = average score for 10 rows and 10 columns of face
+
+for the left side:
+    get p0 = P-score of left-most column (or two)
+    var = True
+    
+
+    
+    while var:
+        if(P-score of left column < .9 pave):
+            change face.coordinates[0][0] += 1
+        else:
+            var = False
+    
+    var = True
+    while var:
+        if(P-score of next left column > .9 p0): #VAR
+            change  face.coordinates[0][0] -= 1
+        else:
+            var = False
+        
+        
+repeat for other 3 sides
+
+maybe check for width/height consistency.  lean towards width being more accurate (necks, etc)
