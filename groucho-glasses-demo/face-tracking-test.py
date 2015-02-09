@@ -4,8 +4,8 @@ from detection import *
 from PIL import Image
 
 
-glasses = Image.open('/Users/Katja/Downloads/groucho_glasses.png', 'r')
-face_cascade = cv2.CascadeClassifier("/Users/Katja/Downloads/haarcascade_frontalface_alt.xml")
+glasses = Image.open('groucho_glasses.png', 'r')
+face_cascade = cv2.CascadeClassifier("face_cascade2.xml")
 
 def detect_img(img):
     rects = face_cascade.detectMultiScale(img, 1.3, 4, cv2.cv.CV_HAAR_SCALE_IMAGE, (20,20))
