@@ -16,9 +16,10 @@ from video import Video
 import cv2, cv
 import time
 from random import *
-from subprocess import call
+import subprocess
 #from PIL import Image
 import numpy
+from time import gmtime, strftime
 
 
 class PictureButton(QPushButton):
@@ -87,8 +88,8 @@ class AddOptions(QWidget):
                 grid.addWidget(button, count/4, count % 4)
                 button.clicked.connect(button.click)
                 count+=1
-                print img
-        print count
+                #print img
+        #print count
 
         self.setLayout(grid)
 
@@ -131,8 +132,8 @@ class FaceOptions(QWidget):
 #        self.face_ids_new = [f.getID() for f in self.faces if not f.obscured]
 #        print "old vs. new face_IDS:", self.face_ids_new
         self.face_ids = [f.getID() for f in self.faces]
-        print "old vs. new face_IDS:", self.old_face_ids, self.face_ids
-        print "checked boxes:", [c.isChecked() for c in self.checkboxes]
+        #print "old vs. new face_IDS:", self.old_face_ids, self.face_ids
+        #print "checked boxes:", [c.isChecked() for c in self.checkboxes]
         if set(self.old_face_ids) != set(self.face_ids):
             self.draw()
 #        self.draw()
@@ -311,8 +312,11 @@ class ImageBox(QWidget):
         self.setLayout(self.grid)
         
     def take_screenshot(self):
-        print "Taking screenshot!"
-        call(["screencapture", "screenshot2.jpg"])
+        time_str = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        name = "Screenshots/screenshot-" + time_str + ".jpg"
+        #call(["screencapture", '-l$(osascript', '-e', '"tell', 'app', '"Python"', 'to', 'id', 'of', 'window', '1")', "test.png"])
+        #subprocess.check_call('screencapture -l$(osascript -e \'tell app "Python" to id of window 1\') test.png')
+        subprocess.call(["screencapture", name])
         
     def draw_objects(self,faces):
         '''Redraws main image to include clicked item/effect for given faces.'''
@@ -328,7 +332,7 @@ class ImageBox(QWidget):
             if not face.isObscured():
                 tuples = face.getPosition()
                 rect = [tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]]
-                for icon_name in face.attachedObjects:
+                for icon_name, icon_id in face.attachedObjects:
                     overlay = QPixmap(os.path.join("icons", icon_name))
                     overlay_copy = overlay.copy()
                     width = rect[2]-rect[0]
@@ -366,12 +370,18 @@ class ImageBox(QWidget):
                         for face in faces:
                             face.attachedObjects = []       
                     elif icon_name == "faceswap.png": 
-                        index_to_swap = randint(0, len(self.face_pics) - 1)
-                        while index_to_swap == faces.index(face):
+                        index_to_swap = icon_id
+                        #if (icon_id < 0) or (icon_id not in [f.getID for f in faces]):
+                        if (icon_id < 0):
                             index_to_swap = randint(0, len(self.face_pics) - 1)
+                            while index_to_swap == faces.index(face):
+                                index_to_swap = randint(0, len(self.face_pics) - 1)
+                            face.removeAttachedObject(("faceswap.png", icon_id))
+                            face.addAttachedObject(("faceswap.png", index_to_swap))
                         overlay_copy = QPixmap(self.face_pics[index_to_swap])
                         overlay_copy = overlay_copy.scaledToWidth(width)
                         painter.drawPixmap(rect[0], rect[1], overlay_copy)
+                        
                     else:
                         print "Not implemeneted yet"
 
@@ -401,7 +411,7 @@ class GuiWindow(QWidget):
         self.rightbox = ControlBox(self)
         grid.addWidget(self.rightbox, 0, 1)
         
-        variables = (0.001, 10, 5, 100, (1,1,1), True)
+        variables = (0.001, 10, 5, 100, (1,1,1), False)
         #vid = Video(0,variables, showWindow=False)
         vid = Video(0,variables)
         
@@ -426,7 +436,7 @@ class GuiWindow(QWidget):
             for face in self.face_list:
                 tuples = face.getPosition()
                 rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
-                print face.getID()
+                #print face.getID()
                 
 
             frame_as_string_in_between = frame.tostring()
@@ -459,12 +469,12 @@ class GuiWindow(QWidget):
     def add_option_clicked(self, button_name):
         '''When PictureButton is clicked, tells main image to redraw appropriately.'''
         checked_faces = self.rightbox.faceChecks.getCheckedFaces()
-        print "face ids:", checked_faces, " button_name:", button_name
+        #print "face ids:", checked_faces, " button_name:", button_name
         
         # Make this actually work! Should alter face objects to add the new "thing", then 
         # need to change code in ImageBox or GuiWindow.draw() to draw things on faces
         for face in checked_faces:
-            face.addAttachedObject(button_name)
+            face.addAttachedObject((button_name, -1))
         
         # Old code: drew on image
         self.leftbox.draw_objects(checked_faces)
