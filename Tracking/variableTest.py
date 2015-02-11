@@ -1,6 +1,6 @@
 import cv2
 import os
-from newVid import Video
+from video import Video
 
 	# # Always between 0 and 1
 	# self.minRemovalScore = variableList[0]

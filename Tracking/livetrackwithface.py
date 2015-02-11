@@ -1,6 +1,6 @@
 import cv2
 import os
-from newVid import Video
+from video import Video
 
 	# # Always between 0 and 1
 	# self.minRemovalScore = variableList[0]
@@ -15,13 +15,16 @@ def goGetEm():
 	timeOut = 10
 	cleanThresh = 5
 	binNumber = 100
-	distanceWeight = 1
-	timeWeight = 1
-	sizeWeight = 1
+	distanceWeight = 0.4
+	sizeWeight = 0.35
+	timeWeight = 0.25
 	weights = (distanceWeight, timeWeight, sizeWeight)
 	writingToFiles = True
-	variables = [minRemovalScore, timeOut, cleanThresh, binNumber, weights, writingToFiles]
-	# vid = Video("test/curl.MP4", variables)
+	distDev = 204
+	timeDev = 0.34
+	sizeDev = 0.28
+	devs = (distDev, timeDev, sizeDev)
+	variables = [minRemovalScore, timeOut, cleanThresh, binNumber, weights, writingToFiles, devs]
 	vid = Video(0, variables)
 	# vidFile = "outvid.avi"
 	# csvFile = "variable.csv"
