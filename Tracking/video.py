@@ -34,6 +34,7 @@ class Video:
 			self.weights = (1,1,1)
 			self.writing = False
 			self.deviation = (400, 0.5, 0.4)
+			self.framesback = 5
 		# add a catch statement for if variable list isn't of length 6
 		else:
 			# Always between 0 and 1
@@ -45,6 +46,7 @@ class Video:
 			self.weights = (variableList[4][0], variableList[4][1], variableList[4][2])
 			self.writing = variableList[5]
 			self.deviation = (variableList[6][0], variableList[6][1], variableList[6][2])
+			self.framesback = variableList[7]
 		if self.writing:
 			self.openCSVWrite("variables.csv")
 
@@ -182,6 +184,165 @@ class Video:
 		else:
 			return 0
 
+	def updateKalman(self, face1):
+		# recentPosition = face1.getPosition()
+		# if face1.prevPositions[0]:
+		# 	recentPosition = face1.prevPositions[0]
+		# else:
+		recentPosition = face1.getPosition()
+
+		# 	middleOfFace = middle
+
+		# else:
+		# middleOfFace = ((recentPosition[1][0]+recentPosition[0][0])/2,(recentPosition[1][1]+recentPosition[0][1])/2)
+		# print middleOfFace
+		topLeft = (recentPosition[0])
+		if face1.leftKalman.state_pre[0,0] == 0.0:
+			face1.leftKalman.state_pre[0,0]  = topLeft[0]
+			face1.leftKalman.state_pre[1,0]  = topLeft[1]
+			face1.leftKalman.state_pre[2,0]  = 0
+			face1.leftKalman.state_pre[3,0]  = 0
+
+			face1.leftKalman.transition_matrix[0,0] = 1
+			face1.leftKalman.transition_matrix[0,2] = 1
+			face1.leftKalman.transition_matrix[1,1] = 1
+			face1.leftKalman.transition_matrix[1,3] = 1
+			face1.leftKalman.transition_matrix[2,2] = 1
+			face1.leftKalman.transition_matrix[3,3] = 1
+
+			cv2.cv.SetIdentity(face1.leftKalman.measurement_matrix, cv2.cv.RealScalar(1))
+			cv2.cv.SetIdentity(face1.leftKalman.process_noise_cov, cv2.cv.RealScalar(1e-5))## 1e-5
+			cv2.cv.SetIdentity(face1.leftKalman.measurement_noise_cov, cv2.cv.RealScalar(1e-1))
+			cv2.cv.SetIdentity(face1.leftKalman.error_cov_post, cv2.cv.RealScalar(0.1))
+
+		# print face1.getVelocity()
+		velocity = face1.getTopLeftVelocity()
+		time = dt.datetime.now()
+		deltaTime = (time - recentPosition[2]).total_seconds()
+		if velocity[2] != 0:
+			xvel = velocity[0]/velocity[2]*deltaTime
+			yvel = velocity[1]/velocity[2]*deltaTime
+		else:
+			xvel = 0
+			yvel = 0
+
+		# print xvel
+		# print yvel
+		# set Kalman Filter
+		time = dt.datetime.now()
+		deltaTime = (time - recentPosition[2]).total_seconds()
+		kalman_prediction = cv2.cv.KalmanPredict(face1.leftKalman)
+
+		# framesback = 5
+		top_left = [0,0]
+		counter = max(len(face1.prevPositions)-1, 0)	
+		# print counter
+		# print "'"
+		# print counter
+		# print len(face1.prevPositions[counter])
+		if not counter < self.framesback and not self.framesback == 0:
+			while counter != len(face1.prevPositions)-self.framesback:
+				# print face1.prevPositions
+				top_left[0] += (face1.prevPositions[counter][0][0])
+				top_left[1] += (face1.prevPositions[counter][0][1])
+				counter-=1
+			top_left[0] += kalman_prediction[0, 0]
+			top_left[0] = top_left[0]/self.framesback+1
+			top_left[1] += kalman_prediction[1,0]
+			top_left[1] = top_left[1]/self.framesback+1
+		else:
+			top_left = [kalman_prediction[0,0], kalman_prediction[1,0]]
+
+		# face1.state_left = middle
+		# print kalman_prediction[0,0]
+		# print kalman_prediction[1,0]
+		rightPoints = cv2.cv.CreateMat(2, 1, cv2.cv.CV_32FC1)
+		rightPoints[0,0]=topLeft[0]
+		rightPoints[1,0]=topLeft[1]
+
+		face1.leftKalman.state_pre[0,0]  = topLeft[0]
+		face1.leftKalman.state_pre[1,0]  = topLeft[1]
+		face1.leftKalman.state_pre[2,0]  = xvel
+		face1.leftKalman.state_pre[3,0]  = yvel
+
+		estimated = cv2.cv.KalmanCorrect(face1.leftKalman, rightPoints)
+		############################
+		botRight = (recentPosition[1])
+		if face1.rightKalman.state_pre[0,0] == 0.0:
+			face1.rightKalman.state_pre[0,0]  = botRight[0]
+			face1.rightKalman.state_pre[1,0]  = botRight[1]
+			face1.rightKalman.state_pre[2,0]  = 0
+			face1.rightKalman.state_pre[3,0]  = 0
+
+			face1.rightKalman.transition_matrix[0,0] = 1
+			face1.rightKalman.transition_matrix[0,2] = 1
+			face1.rightKalman.transition_matrix[1,1] = 1
+			face1.rightKalman.transition_matrix[1,3] = 1
+			face1.rightKalman.transition_matrix[2,2] = 1
+			face1.rightKalman.transition_matrix[3,3] = 1
+
+			cv2.cv.SetIdentity(face1.rightKalman.measurement_matrix, cv2.cv.RealScalar(1))
+			cv2.cv.SetIdentity(face1.rightKalman.process_noise_cov, cv2.cv.RealScalar(1e-5))## 1e-5
+			cv2.cv.SetIdentity(face1.rightKalman.measurement_noise_cov, cv2.cv.RealScalar(1e-1))
+			cv2.cv.SetIdentity(face1.rightKalman.error_cov_post, cv2.cv.RealScalar(0.1))
+
+		# print face1.getVelocity()
+		velocity = face1.getBotRightVelocity()
+		time = dt.datetime.now()
+		deltaTime = (time - recentPosition[2]).total_seconds()
+		if velocity[2] != 0:
+			xvel = velocity[0]/velocity[2]*deltaTime
+			yvel = velocity[1]/velocity[2]*deltaTime
+		else:
+			xvel = 0
+			yvel = 0
+
+		# print xvel
+		# print yvel
+		# set Kalman Filter
+		# time = dt.datetime.now()
+		# deltaTime = (time - recentPosition[2]).total_seconds()
+		kalman_prediction = cv2.cv.KalmanPredict(face1.rightKalman)
+
+		# framesback = 5
+		bot_right = [0,0]
+		counter = max(len(face1.prevPositions)-1, 0)	
+		# print counter
+		# print "'"
+		# print counter
+		# print len(face1.prevPositions[counter])
+		if not counter < self.framesback and not self.framesback == 0:
+			while counter != len(face1.prevPositions)-self.framesback:
+				# print face1.prevPositions
+				bot_right[0] += (face1.prevPositions[counter][1][0])
+				bot_right[1] += (face1.prevPositions[counter][1][1])
+				counter-=1
+			bot_right[0] += kalman_prediction[0, 0]
+			# print middle[0]
+			bot_right[0] = bot_right[0]/self.framesback+1
+			bot_right[1] += kalman_prediction[1,0]
+			bot_right[1] = bot_right[1]/self.framesback+1
+		else:
+			bot_right = [kalman_prediction[0,0], kalman_prediction[1,0]]
+			# print middle
+
+		# print middle
+
+		# print kalman_prediction[0,0]
+		# print kalman_prediction[1,0]
+		rightPoints = cv2.cv.CreateMat(2, 1, cv2.cv.CV_32FC1)
+		rightPoints[0,0]=botRight[0]
+		rightPoints[1,0]=botRight[1]
+
+		face1.rightKalman.state_pre[0,0]  = botRight[0]
+		face1.rightKalman.state_pre[1,0]  = botRight[1]
+		face1.rightKalman.state_pre[2,0]  = xvel
+		face1.rightKalman.state_pre[3,0]  = yvel
+
+		estimated = cv2.cv.KalmanCorrect(face1.rightKalman, rightPoints)
+
+		return [(int(top_left[0]),int(top_left[1])), (int(bot_right[0]),int(bot_right[1]))]
+
 	"""Helper functions"""    
 	def setAllColorProfiles(self):
 		for face in self.visibleFaceList:
@@ -248,7 +409,12 @@ class Video:
 		allface = self.getFaces()
 		for i in range(len(self.visibleFaceList)):
 			if len(self.visibleFaceList[i].getPrevPositions()) > self.cleanThresh:
+				self.updateKalman(self.visibleFaceList[i])
 				self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].getID())
+		for i in range(len(self.notVisibleFaceList)):
+			point = self.updateKalman(self.notVisibleFaceList[i])
+			if point != []:
+				self.showRectangle(point, self.notVisibleFaceList[i].getID())
 		cv2.imshow("show", self.frameImage)
 
 	def showRectangle(self, pos, IDnum):

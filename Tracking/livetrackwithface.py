@@ -9,6 +9,7 @@ from video import Video
 	# self.cleanThresh = variableList[2]
 	# self.binNum = variableList[3]
 	# self.weights = (variableList[4], variableList[5], variableList[6])
+	#self.framesback = variableList[7]
 
 def goGetEm():
 	minRemovalScore = 0.0001
@@ -24,7 +25,8 @@ def goGetEm():
 	timeDev = 0.34
 	sizeDev = 0.28
 	devs = (distDev, timeDev, sizeDev)
-	variables = [minRemovalScore, timeOut, cleanThresh, binNumber, weights, writingToFiles, devs]
+	framesback = 5
+	variables = [minRemovalScore, timeOut, cleanThresh, binNumber, weights, writingToFiles, devs, framesback]
 	vid = Video(0, variables)
 	# vidFile = "outvid.avi"
 	# csvFile = "variable.csv"
