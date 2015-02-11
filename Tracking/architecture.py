@@ -68,6 +68,52 @@ class Face:
 		self.position[0]
 		pass
 
+	def colorEstimateNextPosition(self):
+		oldWidth = self.position[1][0] - self.position[0][0]
+		oldHeight = self.position[1][1] - self.position[0][1]
+		###
+		float pAve = 0
+		for i in range(10):
+			for j in range(height):
+				pAve += getPixelP(colorProfile, PIXELS[self.position[0][0] + (i+1)/10*width][self.position[0][1] + j]) #implement
+			for j in range(width):
+				pAve += getPixelP(colorProfile, PIXELS[self.position[0][0] + j][self.position[0][1] + (i+1)/10*height])
+		pAve = pAve / ((height + width) * 10)
+		###
+		###left
+		#maybe not every pixel.  choice of 2 columns at a time, as well as probability .9, are arbitrary.  at end, do heigh/width test.  adjust bottom wall if ratio is out of whack because neck.
+		float p = 0
+		var = True
+		while(var):
+			for i in range(2):
+				for j in range(height):
+					p += getPixelP(colorProfile, PIXELS[self.position[0][0] + i][self.position[0][1] + j])
+			p /= 2*height
+			if(p < .9*pAve): #VALUE
+				self.position[0][0] += 2
+				if(self.position[0][0] >= self.position[1][0]):
+					print "width is 0"
+					self.position[0][0] = self.position[1][0]
+					var = False
+			else:
+				var = False
+		var = True
+		while(var):
+			for i in range(2):
+				for j in range(height):
+					p += getPixelP(colorProfile, PIXELS[self.position[0][0] - i - 1][self.position[0][1] + j])
+			p /= 2*height
+			if(p > .9*pAve): #VALUE
+				self.position[0][0] -= 2
+				if(selfposition[0][0] < 0):
+					self.position = 0
+					print "left wall"
+					var = False
+				else:
+					var = False
+		###right
+
+
 	def calculateVelocity(self):
 		"""Use last detected position and most recent detected position
 		to estimate how fast the face is moving"""

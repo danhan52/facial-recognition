@@ -182,6 +182,158 @@ class Video:
 		else:
 			return 0
 
+
+	#NEEDS HEIGHT AND WIDTH OF FRAME
+	#NEEDS ACCESS TO THE RGB'S (CALLED PIXELS FOR NOW) frameImage?
+	#getPixelP NEEDS TO BE IMPLEMENTED IN colorImport.py - where did it go?
+	#.9 is arbitrary value
+	def colorEstimateNextPosition(face):
+		oldWidth = face.position[1][0] - face.position[0][0]
+		oldHeight = face.position[1][1] - face.position[0][1]
+		width = oldWidth
+		height = oldHeight
+		###
+		float pAve = 0
+		for i in range(10):
+			for j in range(height):
+				pAve += getPixelP(self.colorProfile, PIXELS[face.position[0][0] + (i+1)/10*width][face.position[0][1] + j]) #implement
+			for j in range(width):
+				pAve += getPixelP(self.colorProfile, PIXELS[face.position[0][0] + j][face.position[0][1] + (i+1)/10*height])
+		pAve = pAve / ((height + width) * 10)
+		###
+		###left
+		float p = 0
+		var = True
+		while(var):
+			for i in range(2):
+				for j in range(height):
+					p += getPixelP(self.colorProfile, PIXELS[face.position[0][0] + i][face.position[0][1] + j])
+			p /= 2*height
+			if(p < .9*pAve): #VALUE
+				face.position[0][0] += 2
+				width -= 2
+				if(face.position[0][0] >= face.position[1][0]):
+					print "width is 0"
+					face.position[0][0] = face.position[1][0]
+					var = False
+			else:
+				var = False
+		var = True
+		while(var):
+			for i in range(2):
+				for j in range(height):
+					p += getPixelP(self.colorProfile, PIXELS[face.position[0][0] - i - 1][face.position[0][1] + j])
+			p /= 2*height
+			if(p > .9*pAve): #VALUE
+				face.position[0][0] -= 2
+				width += 2
+				if(face.position[0][0] < 0):
+					face.position = 0
+					print "left wall"
+					var = False
+				else:
+					var = False
+		###right
+		p = 0
+		var = True
+		while(var):
+			for i in range(2):
+				for j in range(height):
+					p += getPixelP(self.colorProfile, PIXELS[face.position[1][0] - i][face.position[0][1] + j])
+			p /= 2*height
+			if(p < .9*pAve): #VALUE
+				face.position[1][0] -= 2
+				width -= 2
+				if(face.position[0][0] >= face.position[1][0]):
+					print "width is 0"
+					face.position[1][0] = face.position[0][0]
+					var = False
+			else:
+				var = False
+		var = True
+		while(var):
+			for i in range(2):
+				for j in range(height):
+					p += getPixelP(self.colorProfile, PIXELS[face.position[1][0] + i + 1][face.position[0][1] + j])
+			p /= 2*height
+			if(p > .9*pAve): #VALUE
+				face.position[1][0] += 2
+				width += 2
+				if(face.position[1][0] >= #WIDTH):
+					face.position = #WIDTH - 1
+					print "right wall"
+					var = False
+				else:
+					var = False
+		#top
+		p = 0
+		var = True
+		while(var):
+			for i in range(2):
+				for j in range(width):
+					p += getPixelP(self.colorProfile, PIXELS[face.position[0][0] + j][face.position[0][1] + i])
+			p /= 2*width
+			if(p < .9*pAve): #VALUE
+				face.position[0][1] += 2
+				height -= 2
+				if(face.position[0][1] >= face.position[1][1]):
+					print "height is 0"
+					face.position[0][1] = face.position[1][1]
+					var = False
+			else:
+				var = False
+		var = True
+		while(var):
+			for i in range(2):
+				for j in range(width):
+					p += getPixelP(self.colorProfile, PIXELS[face.position[0][0] + j][face.position[0][1] - 1 - i])
+			p /= 2*width
+			if(p > .9*pAve): #VALUE
+				face.position[0][1] -= 2
+				height += 2
+				if(face.position[0][1] < 0):
+					face.position[0][1] = 0
+					print "top wall"
+					var = False
+				else:
+					var = False
+		#bottom
+		p = 0
+		var = True
+		while(var):
+			for i in range(2):
+				for j in range(width):
+					p += getPixelP(self.colorProfile, PIXELS[face.position[0][0] + j][face.position[1][1] - i])
+			p /= 2*width
+			if(p < .9*pAve): #VALUE
+				face.position[1][1] -= 2
+				height -= 2
+				if(face.position[0][1] >= face.position[1][1]):
+					print "height is 0"
+					face.position[1][1] = face.position[0][1]
+					var = False
+			else:
+				var = False
+		var = True
+		while(var):
+			for i in range(2):
+				for j in range(width):
+					p += getPixelP(self.colorProfile, PIXELS[face.position[0][0] + j][face.position[0][1] + 1 + i])
+			p /= 2*width
+			if(p > .9*pAve): #VALUE
+				face.position[1][1] -= 2
+				height += 2
+				if(face.position[1][1] >= #HEIGHT):
+					face.position[1][1] = #HEIGHT
+					print "bottom wall"
+					var = False
+				else:
+					var = False
+		#
+		#adjust ratio
+		if(float(height)/width > float(oldHeight)/oldWidth):
+			face.position[1][1] = int(face.position[0][1] + oldHeight*width/oldWidth)
+
 	"""Helper functions"""    
 	def setAllColorProfiles(self):
 		for face in self.visibleFaceList:
