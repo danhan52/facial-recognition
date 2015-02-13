@@ -11,22 +11,23 @@ from video import Video
 	# self.weights = (variableList[4], variableList[5], variableList[6])
 
 def goGetEm():
-	minRemovalScore = 0.0001
+	minRemovalScore = 0.1
 	timeOut = 10
 	cleanThresh = 5
 	binNumber = 100
-	distanceWeight = 0.4
-	sizeWeight = 0.35
-	timeWeight = 0.25
+	distanceWeight = 0.5
+	timeWeight = 0.0
+	sizeWeight = 0.5
 	weights = (distanceWeight, timeWeight, sizeWeight)
 	writingToFiles = True
-	distDev = 204
+	distDev = 200
 	timeDev = 0.34
-	sizeDev = 0.28
+	sizeDev = 0.25
 	devs = (distDev, timeDev, sizeDev)
-	variables = [minRemovalScore, timeOut, cleanThresh, binNumber, weights, writingToFiles, devs]
+	framesback = 5
+	variables = [minRemovalScore, timeOut, cleanThresh, binNumber, weights, writingToFiles, devs, framesback]
 	vidFile = "outvid.avi"
-	vid = Video("test/part_o.MP4", variables, False)
+	vid = Video("Testvideos/Movie1.mov", variables, False)
 	vid.openVidWrite(vidFile)
 	success = vid.readFrame()
 	while (success):

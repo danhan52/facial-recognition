@@ -5,7 +5,7 @@ import os
 import csv
 from face import Face
 from sortings import *
-from colorImport import *
+# from colorImport import *
 
 class Video:
 	def __init__(self, vidSource, variableList=[], showWindow=True):
@@ -91,7 +91,8 @@ class Video:
 			while(count < len(scoreList)):
 				if scoreList[count][0] < self.minRemovalScore:
 					scoreList.pop(count)
-				count += 1
+				else:
+					count += 1
 			mergeSortScore(scoreList)
 			# tools for remembering
 			usedRects = []
@@ -583,7 +584,7 @@ class Video:
 	"""Meant for testing"""
 	def openVidWrite(self, filen):
 		fourcc = int(cv2.cv.CV_FOURCC('I', 'Y', 'U', 'V'))
-		fps = 15 		# self.vidcap.get(cv2.cv.CV_CAP_PROP_FPS)
+		fps = self.vidcap.get(cv2.cv.CV_CAP_PROP_FPS)
 		framew = int(self.vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
 		frameh = int(self.vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 		self.vidwrite = cv2.VideoWriter()
