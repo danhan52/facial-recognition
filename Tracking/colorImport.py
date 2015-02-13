@@ -6,9 +6,9 @@ def setProfile(image, coordinates, bins):
 	imageWidth = len(image)
 	imageHeight = len(image[0])
 	pixelData = []
-	for i in range(imageWidth):
+	for i in range(imageWidth, 10):
 		row = []
-		for j in range(imageHeight):
+		for j in range(imageHeight, 10):
 			#adjust intensity r = R/(R+G+B)
 			intensity = float(image[i][j][0] + image.getpixel[i][j][1] + image.getpixel[i][j][2])
 			row.append((image.getpixel[i][j][0] / intensity, image.getpixel[i][j][1] / intensity))
@@ -55,13 +55,7 @@ def setProfile(image, coordinates, bins):
 	for bin in range(len(skinHistR)):
 		pRed.append(float(skinHistR[bin]) / (notSkinHistR[bin] + skinHistR[bin]))
 		pGreen.append(float(skinHistG[bin]) / (notSkinHistG[bin] + skinHistG[bin]))
-	'''pRed2 = [] #method 2 for calculating probability
-	pGreen2 = []
-	for bin in range(len(skinHistR)):
-		pRed2.append(math.exp(skinHistR[bin]) / nSkin * nTotal / (notSkinHistR[bin]))
-		pGreen2.append(math.exp(skinHistG[bin]) / nSkin * nTotal / (notSkinHistG[bin]))'''
-
-	return {pRed, pGreen}
+	return [pRed, pGreen]
 
 
 def colorScore(image2, coordinates, profile):
@@ -96,3 +90,25 @@ def colorScore(image2, coordinates, profile):
 	score /= len(pixelData2)*len(pixelData2[0])
 
 	return score
+
+def getPixelP(profile, pixel, bins):
+	intensity = pixel[0] + pixel[1] + pixel[2]
+	r = float(pixel[0]) / intensity
+	g = float(pixel[1]) / intensity
+	x = 0.0
+	y = 0.0
+	pRed = profile[0]
+	pGreen = profile[1]
+	if(r > .7 and g > .7):
+		x = pRed[bins - 1]
+		y = pGreen[bins - 1]
+	elif(r > .7):
+		x = pRed[bins - 1]
+		y = pGreen[g / (.7 / (bins - 1)))]
+	elif(g > .7):
+		x = pRed[int(r / (.7 / (bins - 1)))]
+		y = pGreen[bins - 1]
+	else:
+		x = pRed[r / (.7 / (bins - 1)))]
+		y = pGreen[g / (.7 / (bins - 1)))]
+	return x * y

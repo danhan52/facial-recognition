@@ -3,6 +3,7 @@ import datetime as dt
 import cv2
 import os
 import csv
+import copy
 from face import Face
 from sortings import *
 # from colorImport import *
@@ -350,24 +351,23 @@ class Video:
 
 #		return [(int(top_left[0]),int(top_left[1])), (int(bot_right[0]),int(bot_right[1]))]
 
-	#NEEDS HEIGHT AND WIDTH OF FRAME
-	#NEEDS ACCESS TO THE RGB'S (CALLED PIXELS FOR NOW) frameImage?
-	#getPixelP NEEDS TO BE IMPLEMENTED IN colorImport.py - where did it go?
 	#.9 is arbitrary value
-	def colorEstimateNextPosition(face):
+	def colorEstimateNextPosition(self, face):
 		framew = int(self.vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
 		frameh = int(self.vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 		oldWidth = face.position[1][0] - face.position[0][0]
 		oldHeight = face.position[1][1] - face.position[0][1]
 		width = oldWidth
 		height = oldHeight
+		newPosition = copy.deepcopy(face.position)
+
 		###
 		pAve = float(0)
 		for i in range(10):
 			for j in range(height):
-				pAve += getPixelP(self.colorProfile, PIXELS[face.position[0][0] + (i+1)/10*width][face.position[0][1] + j]) #implement
+				pAve += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] + (i+1)/10*width][newPosition[0][1] + j], self.binNum) #implement
 			for j in range(width):
-				pAve += getPixelP(self.colorProfile, PIXELS[face.position[0][0] + j][face.position[0][1] + (i+1)/10*height])
+				pAve += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] + (i+1)/10*height], self.binNum)
 		pAve = pAve / ((height + width) * 10)
 		###
 		###left
@@ -376,14 +376,14 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(height):
-					p += getPixelP(self.colorProfile, PIXELS[face.position[0][0] + i][face.position[0][1] + j])
+					p += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] + i][newPosition[0][1] + j], self.binNum)
 			p /= 2*height
 			if(p < .9*pAve): #VALUE
-				face.position[0][0] += 2
+				newPosition[0][0] += 2
 				width -= 2
-				if(face.position[0][0] >= face.position[1][0]):
+				if(newPosition[0][0] >= newPosition[1][0]):
 					print "width is 0"
-					face.position[0][0] = face.position[1][0]
+					newPosition[0][0] = newPosition[1][0]
 					var = False
 			else:
 				var = False
@@ -391,13 +391,13 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(height):
-					p += getPixelP(self.colorProfile, PIXELS[face.position[0][0] - i - 1][face.position[0][1] + j])
+					p += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] - i - 1][newPosition[0][1] + j], self.binNum)
 			p /= 2*height
 			if(p > .9*pAve): #VALUE
-				face.position[0][0] -= 2
+				newPosition[0][0] -= 2
 				width += 2
-				if(face.position[0][0] < 0):
-					face.position = 0
+				if(newPosition[0][0] < 0):
+					newPosition = 0
 					print "left wall"
 					var = False
 				else:
@@ -408,14 +408,14 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(height):
-					p += getPixelP(self.colorProfile, PIXELS[face.position[1][0] - i][face.position[0][1] + j])
+					p += getPixelP(self.colorProfile, self.frameImage[newPosition[1][0] - i][newPosition[0][1] + j], self.binNum)
 			p /= 2*height
 			if(p < .9*pAve): #VALUE
-				face.position[1][0] -= 2
+				newPosition[1][0] -= 2
 				width -= 2
-				if(face.position[0][0] >= face.position[1][0]):
+				if(newPosition[0][0] >= newPosition[1][0]):
 					print "width is 0"
-					face.position[1][0] = face.position[0][0]
+					newPosition[1][0] = newPosition[0][0]
 					var = False
 			else:
 				var = False
@@ -423,13 +423,13 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(height):
-					p += getPixelP(self.colorProfile, PIXELS[face.position[1][0] + i + 1][face.position[0][1] + j])
+					p += getPixelP(self.colorProfile, self.frameImage[newPosition[1][0] + i + 1][newPosition[0][1] + j], self.binNum)
 			p /= 2*height
 			if(p > .9*pAve): #VALUE
-				face.position[1][0] += 2
+				newPosition[1][0] += 2
 				width += 2
-				if(face.position[1][0] >= fWidth):
-					face.position = fWidth - 1
+				if(newPosition[1][0] >= fWidth):
+					newPosition = fWidth - 1
 					print "right wall"
 					var = False
 				else:
@@ -440,14 +440,14 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(width):
-					p += getPixelP(self.colorProfile, PIXELS[face.position[0][0] + j][face.position[0][1] + i])
+					p += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] + i], self.binNum)
 			p /= 2*width
 			if(p < .9*pAve): #VALUE
-				face.position[0][1] += 2
+				newPosition[0][1] += 2
 				height -= 2
-				if(face.position[0][1] >= face.position[1][1]):
+				if(newPosition[0][1] >= newPosition[1][1]):
 					print "height is 0"
-					face.position[0][1] = face.position[1][1]
+					newPosition[0][1] = newPosition[1][1]
 					var = False
 			else:
 				var = False
@@ -455,13 +455,13 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(width):
-					p += getPixelP(self.colorProfile, PIXELS[face.position[0][0] + j][face.position[0][1] - 1 - i])
+					p += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] - 1 - i], self.binNum)
 			p /= 2*width
 			if(p > .9*pAve): #VALUE
-				face.position[0][1] -= 2
+				newPosition[0][1] -= 2
 				height += 2
-				if(face.position[0][1] < 0):
-					face.position[0][1] = 0
+				if(newPosition[0][1] < 0):
+					newPosition[0][1] = 0
 					print "top wall"
 					var = False
 				else:
@@ -472,14 +472,14 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(width):
-					p += getPixelP(self.colorProfile, PIXELS[face.position[0][0] + j][face.position[1][1] - i])
+					p += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[1][1] - i], self.binNum)
 			p /= 2*width
 			if(p < .9*pAve): #VALUE
-				face.position[1][1] -= 2
+				newPosition[1][1] -= 2
 				height -= 2
-				if(face.position[0][1] >= face.position[1][1]):
+				if(newPosition[0][1] >= newPosition[1][1]):
 					print "height is 0"
-					face.position[1][1] = face.position[0][1]
+					newPosition[1][1] = newPosition[0][1]
 					var = False
 			else:
 				var = False
@@ -487,13 +487,13 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(width):
-					p += getPixelP(self.colorProfile, PIXELS[face.position[0][0] + j][face.position[0][1] + 1 + i])
+					p += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] + 1 + i], self.binNum)
 			p /= 2*width
 			if(p > .9*pAve): #VALUE
-				face.position[1][1] -= 2
+				newPosition[1][1] -= 2
 				height += 2
-				if(face.position[1][1] >= fHeight):
-					face.position[1][1] = fHeight
+				if(newPosition[1][1] >= fHeight):
+					newPosition[1][1] = fHeight
 					print "bottom wall"
 					var = False
 				else:
@@ -501,7 +501,10 @@ class Video:
 		#
 		#adjust ratio
 		if(float(height)/width > float(oldHeight)/oldWidth):
-			face.position[1][1] = int(face.position[0][1] + oldHeight*width/oldWidth)
+			newPosition[1][1] = int(newPosition[0][1] + oldHeight*width/oldWidth)
+
+		return newPosition
+
 
 
 	"""Helper functions"""    
