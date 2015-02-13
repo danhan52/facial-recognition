@@ -27,8 +27,8 @@ def setProfile(image, coordinates, bins):
 		notSkinHistG.append(1)
 
 	#nSkin = 0 #nSkin not used right now
-	for x in range(imageWidth):
-		for y in range(imageHeight):
+	for x in range(imageWidth, 10):
+		for y in range(imageHeight, 10):
 			#assuming better accuracy by assuming face is a diamond.  checking if pixel is outside of the face
 			if(y + x * imageHeight / imageWidth <= imageHeight / 2 or y - x * imageHeight / imageWidth >= imageHeight / 2 or y + x * imageHeight / imageWidth >= 1.5 * imageHeight or y - x * imageHeight / imageWidth <= -0.5 * imageHeight):
 				if(pixelData[x][y][0] > .7):
@@ -104,11 +104,11 @@ def getPixelP(profile, pixel, bins):
 		y = pGreen[bins - 1]
 	elif(r > .7):
 		x = pRed[bins - 1]
-		y = pGreen[g / (.7 / (bins - 1)))]
+		y = pGreen[int(g / (.7 / (bins - 1)))]
 	elif(g > .7):
 		x = pRed[int(r / (.7 / (bins - 1)))]
 		y = pGreen[bins - 1]
 	else:
-		x = pRed[r / (.7 / (bins - 1)))]
-		y = pGreen[g / (.7 / (bins - 1)))]
+		x = pRed[int(r / (.7 / (bins - 1)))]
+		y = pGreen[int(g / (.7 / (bins - 1)))]
 	return x * y

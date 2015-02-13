@@ -6,7 +6,7 @@ import csv
 import copy
 from face import Face
 from sortings import *
-# from colorImport import *
+from colorImport import *
 
 class Video:
 	def __init__(self, vidSource, variableList=[], showWindow=True):
@@ -144,6 +144,7 @@ class Video:
 					self.addNewFace(rects[i])
 		for face in self.visibleFaceList:
 			self.updateKalman(face)
+			face.colorProfile = setProfile(self.frameImage,face.getPosition(),self.binNum)
 		for face in self.notVisibleFaceList:
 			self.updateKalman(face)
 		# if self.writing:
@@ -365,9 +366,9 @@ class Video:
 		pAve = float(0)
 		for i in range(10):
 			for j in range(height):
-				pAve += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] + (i+1)/10*width][newPosition[0][1] + j], self.binNum) #implement
+				pAve += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + (i+1)/10*width][newPosition[0][1] + j], self.binNum) #implement
 			for j in range(width):
-				pAve += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] + (i+1)/10*height], self.binNum)
+				pAve += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] + (i+1)/10*height], self.binNum)
 		pAve = pAve / ((height + width) * 10)
 		###
 		###left
@@ -376,7 +377,7 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(height):
-					p += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] + i][newPosition[0][1] + j], self.binNum)
+					p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + i][newPosition[0][1] + j], self.binNum)
 			p /= 2*height
 			if(p < .9*pAve): #VALUE
 				newPosition[0][0] += 2
@@ -391,7 +392,7 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(height):
-					p += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] - i - 1][newPosition[0][1] + j], self.binNum)
+					p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] - i - 1][newPosition[0][1] + j], self.binNum)
 			p /= 2*height
 			if(p > .9*pAve): #VALUE
 				newPosition[0][0] -= 2
@@ -408,7 +409,7 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(height):
-					p += getPixelP(self.colorProfile, self.frameImage[newPosition[1][0] - i][newPosition[0][1] + j], self.binNum)
+					p += getPixelP(face.colorProfile, self.frameImage[newPosition[1][0] - i][newPosition[0][1] + j], self.binNum)
 			p /= 2*height
 			if(p < .9*pAve): #VALUE
 				newPosition[1][0] -= 2
@@ -423,7 +424,7 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(height):
-					p += getPixelP(self.colorProfile, self.frameImage[newPosition[1][0] + i + 1][newPosition[0][1] + j], self.binNum)
+					p += getPixelP(face.colorProfile, self.frameImage[newPosition[1][0] + i + 1][newPosition[0][1] + j], self.binNum)
 			p /= 2*height
 			if(p > .9*pAve): #VALUE
 				newPosition[1][0] += 2
@@ -440,7 +441,7 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(width):
-					p += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] + i], self.binNum)
+					p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] + i], self.binNum)
 			p /= 2*width
 			if(p < .9*pAve): #VALUE
 				newPosition[0][1] += 2
@@ -455,7 +456,7 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(width):
-					p += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] - 1 - i], self.binNum)
+					p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] - 1 - i], self.binNum)
 			p /= 2*width
 			if(p > .9*pAve): #VALUE
 				newPosition[0][1] -= 2
@@ -472,7 +473,7 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(width):
-					p += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[1][1] - i], self.binNum)
+					p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[1][1] - i], self.binNum)
 			p /= 2*width
 			if(p < .9*pAve): #VALUE
 				newPosition[1][1] -= 2
@@ -487,7 +488,7 @@ class Video:
 		while(var):
 			for i in range(2):
 				for j in range(width):
-					p += getPixelP(self.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] + 1 + i], self.binNum)
+					p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] + 1 + i], self.binNum)
 			p /= 2*width
 			if(p > .9*pAve): #VALUE
 				newPosition[1][1] -= 2
@@ -576,8 +577,9 @@ class Video:
 			if len(self.visibleFaceList[i].getPrevPositions()) > self.cleanThresh:
 				self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].getID())
 		for i in range(len(self.notVisibleFaceList)):
-			if self.notVisibleFaceList[i].predictedPosition != []:
-				self.showRectangle(self.notVisibleFaceList[i].predictedPosition, self.notVisibleFaceList[i].getID())
+#			if self.notVisibleFaceList[i].predictedPosition != []:
+#				self.showRectangle(self.notVisibleFaceList[i].predictedPosition, self.notVisibleFaceList[i].getID())
+			self.showRectangle(self.colorEstimateNextPosition(self.notVisibleFaceList[i]), self.notVisibleFaceList[i].getID())
 		cv2.imshow("show", self.frameImage)
 
 	def showRectangle(self, pos, IDnum):
