@@ -39,7 +39,7 @@ def goGetEm():
 		vid.display()
 		# vid.writeToVideo()
 		# exit on escape key
-		key = cv2.waitKey(20)
+		key = cv2.waitKey(1)
 		if key == 27:
 			break
 	vid.endWindow()
