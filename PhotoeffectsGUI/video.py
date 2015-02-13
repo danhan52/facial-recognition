@@ -228,6 +228,7 @@ class Video:
 		"""read frame from openCV info"""
 		self.previousFrame = self.frameImage
 		success, self.frameImage = self.vidcap.read()
+		self.frameImage = cv2.flip(self.frameImage,1)
 		return success, self.frameImage
 
 	def display(self):
