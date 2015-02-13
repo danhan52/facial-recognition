@@ -20,6 +20,7 @@ class Face:
 		#Kalman filters for top left and bottom right
 		self.rightKalman = cv2.cv.CreateKalman(4, 2, 0)
 		self.leftKalman = cv2.cv.CreateKalman(4, 2, 0) 
+		self.predictedPosition = []
 		# list of mini-images that are attached to the face
 		# (each entry contains info about what the image is, where it is, area, etc.)
 		self.attachedObjects = []  

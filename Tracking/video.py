@@ -141,6 +141,10 @@ class Video:
 				if (i not in usedRects):
 					print "Make new face"
 					self.addNewFace(rects[i])
+		for face in self.visibleFaceList:
+			self.updateKalman(face)
+		for face in self.notVisibleFaceList:
+			self.updateKalman(face)
 		# if self.writing:
 		# 	self.writeToCSV([])
 
@@ -151,19 +155,18 @@ class Video:
 		time = dt.datetime.now()
 		recentPosition = face.getPosition()
 		if not (recentPosition==[]):
+			deltaTime = (time - recentPosition[2]).total_seconds()
+			if deltaTime > 0.5 and face.predictedPosition != []:
+				recentPosition = face.predictedPosition
 			face.getVelocity()
 			# get time change
-			deltaTime = (time - recentPosition[2]).total_seconds()
 			# get size change
 			width = face.getWidth()
 			rectWidth = abs(rect[0]-rect[2])
 			diffWidths = 1.0*abs(width-rectWidth)/width
 			# get position change
 			middleOfRect = ((rect[2]+rect[0])/2,(rect[3]+rect[1])/2)
-			if deltaTime < 0.5:
-				middleOfFace = ((recentPosition[1][0]+recentPosition[0][0])/2,(recentPosition[1][1]+recentPosition[0][1])/2)
-			else:
-				middleOfFace = face.estimateNextPosition(time)
+			middleOfFace = ((recentPosition[1][0]+recentPosition[0][0])/2,(recentPosition[1][1]+recentPosition[0][1])/2)
 			diffMiddles = math.pow(math.pow(middleOfFace[0]-middleOfRect[0], 2) + math.pow(middleOfFace[1]-middleOfRect[1], 2), 0.5)
 			
 			# asymptote equation such that after the difference in middles is more than 1 radius away,
@@ -341,8 +344,11 @@ class Video:
 		face1.rightKalman.state_pre[3,0]  = yvel
 
 		estimated = cv2.cv.KalmanCorrect(face1.rightKalman, rightPoints)
+		
+		prediction = [(int(top_left[0]),int(top_left[1])), (int(bot_right[0]),int(bot_right[1]))]
+		face1.predictedPosition = prediction
 
-		return [(int(top_left[0]),int(top_left[1])), (int(bot_right[0]),int(bot_right[1]))]
+#		return [(int(top_left[0]),int(top_left[1])), (int(bot_right[0]),int(bot_right[1]))]
 
 	#NEEDS HEIGHT AND WIDTH OF FRAME
 	#NEEDS ACCESS TO THE RGB'S (CALLED PIXELS FOR NOW) frameImage?
@@ -565,12 +571,10 @@ class Video:
 		allface = self.getFaces()
 		for i in range(len(self.visibleFaceList)):
 			if len(self.visibleFaceList[i].getPrevPositions()) > self.cleanThresh:
-				self.updateKalman(self.visibleFaceList[i])
 				self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].getID())
 		for i in range(len(self.notVisibleFaceList)):
-			point = self.updateKalman(self.notVisibleFaceList[i])
-			if point != []:
-				self.showRectangle(point, self.notVisibleFaceList[i].getID())
+			if self.notVisibleFaceList[i].predictedPosition != []:
+				self.showRectangle(self.notVisibleFaceList[i].predictedPosition, self.notVisibleFaceList[i].getID())
 		cv2.imshow("show", self.frameImage)
 
 	def showRectangle(self, pos, IDnum):

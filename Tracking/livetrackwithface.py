@@ -25,7 +25,7 @@ def goGetEm():
 	timeDev = 0.34
 	sizeDev = 0.28
 	devs = (distDev, timeDev, sizeDev)
-	framesback = 5
+	framesback = 2
 	variables = [minRemovalScore, timeOut, cleanThresh, binNumber, weights, writingToFiles, devs, framesback]
 	vid = Video(0, variables)
 	# vidFile = "outvid.avi"
