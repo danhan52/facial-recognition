@@ -354,20 +354,34 @@ class Video:
 
 	#.9 is arbitrary value
 	def colorEstimateNextPosition(self, face):
+		print "hi"
 		framew = int(self.vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
 		frameh = int(self.vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 		oldWidth = face.position[1][0] - face.position[0][0]
 		oldHeight = face.position[1][1] - face.position[0][1]
 		width = oldWidth
 		height = oldHeight
-		newPosition = copy.deepcopy(face.position)
+		newPosition = []
+		newPosition.append([face.position[0][0], face.position[0][1]])
+		newPosition.append([face.position[1][0], face.position[1][1]])
+		print face.position
+		print newPosition
 
 		###
 		pAve = float(0)
 		for i in range(10):
 			for j in range(height):
-				pAve += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + (i+1)/10*width][newPosition[0][1] + j], self.binNum) #implement
+			    print framew, frameh
+			    print newPosition[0][0] + (i+1)/10*width, newPosition[0][1] + j
+			    pAve += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + (i+1)/10*width][newPosition[0][1] + j], self.binNum) #implement
 			for j in range(width):
+				#print self.frameImage[newPosition[0][0] + j]
+				print width, height
+				#print newPosition[0][0] + j
+				print newPosition
+				print newPosition[0][0] + j, newPosition[0][1] + (i+1)/10*height
+				print "hi"
+				print self.frameImage[0][720]
 				pAve += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] + (i+1)/10*height], self.binNum)
 		pAve = pAve / ((height + width) * 10)
 		###

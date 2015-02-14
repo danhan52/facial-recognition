@@ -10,7 +10,7 @@ def setProfile(image, coordinates, bins):
 		row = []
 		for j in range(imageHeight, 10):
 			#adjust intensity r = R/(R+G+B)
-			intensity = float(image[i][j][0] + image.getpixel[i][j][1] + image.getpixel[i][j][2])
+			intensity = float(image[i][j][0] + image.getpixel[i][j][1] + image.getpixel[i][j][2] + 1)
 			row.append((image.getpixel[i][j][0] / intensity, image.getpixel[i][j][1] / intensity))
 			#FOR LATER, GROUP ANYTHING ABOVE .7
 		pixelData.append(row)
@@ -92,7 +92,7 @@ def colorScore(image2, coordinates, profile):
 	return score
 
 def getPixelP(profile, pixel, bins):
-	intensity = pixel[0] + pixel[1] + pixel[2]
+	intensity = pixel[0] + pixel[1] + pixel[2] + 1
 	r = float(pixel[0]) / intensity
 	g = float(pixel[1]) / intensity
 	x = 0.0
