@@ -4,18 +4,23 @@ import cv2
 import os
 
 class Face:
-	def __init__(self, useFeatures=False):
+	def __init__(self, weights=(1,1,1), useFeatures=False):
 		self.position = []		# where the face is in the frame
 		self.prevPositions = []		# all previous positions and times that they were seen
 		self.velocity = ()		# vector describing x change, y change, and time change
 		self.orientation = 0		# the tilt of the head (degrees)
-		self.timeSinceDetection = 0	# frames since last detection
 		self.obscured = False		# whether the head was detected in the last detection
-		self.colorAvg = 0			# average pixel intensity of facial region
 		self.usingFeatures = useFeatures
 		self.id = 0
 		self.colorProfile = []
+		self.dWeight = weights[0]
+		self.tWeight = weights[1]
+		self.wWeight = weights[2]
 		
+		#Kalman filters for top left and bottom right
+		self.rightKalman = cv2.cv.CreateKalman(4, 2, 0)
+		self.leftKalman = cv2.cv.CreateKalman(4, 2, 0) 
+		self.predictedPosition = []
 		# list of mini-images that are attached to the face
 		# (each entry contains info about what the image is, where it is, area, etc.)
 		self.attachedObjects = []  
@@ -30,6 +35,9 @@ class Face:
 
 	def getPosition(self):
 		return self.position
+
+	def getPrevPositions(self):
+		return self.prevPositions
 
 	def setPosition(self, rects):
 		"""takes list of tuples pos and sets that as position
@@ -47,38 +55,34 @@ class Face:
 	def setID(self, newID):
 		self.id = newID
 
-	def getArea(self):
-		"""using position, return area of face"""
+	def getWidth(self):
+		"""using position, return width of face"""
 		if (self.position==[]):
 			return 0
-		return abs((self.position[1][0]-self.position[0][0])*(self.position[1][1]-self.position[0][1]))
+		return abs(self.position[1][0]-self.position[0][0])
 
-	def incrementTimeSinceDetection(self):
-		self.timeSinceDetection+=1
-
-	def getTimeSinceDetection(self):
-		return self.timeSinceDetection
-
+	def getAge(self):
+		age = (dt.datetime.now()-timeself.prevPositions[0][2]).total_seconds()
+		return age
+		
 	def isObscured(self):
 		return self.obscured
 
 	def setObscured(self, truthVal):
 		self.obscured = truthVal
 
-	def setColorAvg(self, avgVal):
-		"""method to calculate the average intensity value of the face"""
-		pass
-
-	def getColorAvg(self):
-		return self.colorAvg
-
 	def estimateNextPosition(self, time):
 		"""Use velocity and most recent position
 		to calculate a new slightly modified position. Meant for when
 		we are estimating where the face is"""
-		self.prevPositions.append(self.position)
-		self.position[0]
-		pass
+		deltaTime = (time - self.position[2]).total_seconds()
+		self.getVelocity()
+		middleOfFace = ((self.position[1][0]+self.position[0][0])/2,(self.position[1][1]+self.position[0][1])/2)
+		if self.velocity != 0:
+			dx = self.velocity[0]/self.velocity[2]*deltaTime
+			dy = self.velocity[1]/self.velocity[2]*deltaTime
+			middleOfFace = (middleOfFace[0] + dx, middleOfFace[1] + dy)	
+		return middleOfFace
 
 	def getVelocity(self):
 		"""Use last detected position and most recent detected position
@@ -92,6 +96,30 @@ class Face:
 			self.velocity = (xdist,ydist,time.total_seconds())
 		return self.velocity
 			#speed = math.pow(math.pow(1.0*xdist,2) + math.pow(1.0*ydist,2),0.5) / (1.0*time.total_seconds())
+
+	def getTopLeftVelocity(self):
+		"""Use last detected position and most recent detected position
+		to estimate how fast the face is moving"""
+		if len(self.prevPositions) < 2:
+			self.velocity = (0,0,0)
+		else:
+			time = self.position[2] - self.prevPositions[len(self.prevPositions)-1][2]
+			xdist = self.position[0][0] - self.prevPositions[len(self.prevPositions)-1][0][0]
+			ydist = self.position[0][1] - self.prevPositions[len(self.prevPositions)-1][0][1]
+			self.velocity = (xdist,ydist,time.total_seconds())
+		return self.velocity
+
+	def getBotRightVelocity(self):
+		"""Use last detected position and most recent detected position
+		to estimate how fast the face is moving"""
+		if len(self.prevPositions) < 2:
+			self.velocity = (0,0,0)
+		else:
+			time = self.position[2] - self.prevPositions[len(self.prevPositions)-1][2]
+			xdist = self.position[1][0] - self.prevPositions[len(self.prevPositions)-1][1][0]
+			ydist = self.position[1][1] - self.prevPositions[len(self.prevPositions)-1][1][1]
+			self.velocity = (xdist,ydist,time.total_seconds())
+		return self.velocity
 
 	def update(self, pos):
 		"""Calls most of the above methods to give a complete and new

@@ -5,13 +5,14 @@ def setProfile(image, coordinates, bins):
 	#put {R,G} tuples in 2D-array
 	imageWidth = len(image)
 	imageHeight = len(image[0])
+	print imageHeight, imageWidth
 	pixelData = []
-	for i in range(imageWidth):
+	for i in range(0, imageWidth, 10):
 		row = []
-		for j in range(imageHeight):
+		for j in range(0, imageHeight, 10):
 			#adjust intensity r = R/(R+G+B)
-			intensity = float(image[i][j][0] + image.getpixel[i][j][1] + image.getpixel[i][j][2])
-			row.append((image.getpixel[i][j][0] / intensity, image.getpixel[i][j][1] / intensity))
+			intensity = float(image[i][j][0] + image[i][j][1] + image[i][j][2] + 1)
+			row.append((image[i][j][0] / intensity, image[i][j][1] / intensity))
 			#FOR LATER, GROUP ANYTHING ABOVE .7
 		pixelData.append(row)
 
@@ -27,8 +28,8 @@ def setProfile(image, coordinates, bins):
 		notSkinHistG.append(1)
 
 	#nSkin = 0 #nSkin not used right now
-	for x in range(imageWidth):
-		for y in range(imageHeight):
+	for x in range(0, imageWidth, 10):
+		for y in range(0, imageHeight, 10):
 			#assuming better accuracy by assuming face is a diamond.  checking if pixel is outside of the face
 			if(y + x * imageHeight / imageWidth <= imageHeight / 2 or y - x * imageHeight / imageWidth >= imageHeight / 2 or y + x * imageHeight / imageWidth >= 1.5 * imageHeight or y - x * imageHeight / imageWidth <= -0.5 * imageHeight):
 				if(pixelData[x][y][0] > .7):
@@ -55,13 +56,7 @@ def setProfile(image, coordinates, bins):
 	for bin in range(len(skinHistR)):
 		pRed.append(float(skinHistR[bin]) / (notSkinHistR[bin] + skinHistR[bin]))
 		pGreen.append(float(skinHistG[bin]) / (notSkinHistG[bin] + skinHistG[bin]))
-	'''pRed2 = [] #method 2 for calculating probability
-	pGreen2 = []
-	for bin in range(len(skinHistR)):
-		pRed2.append(math.exp(skinHistR[bin]) / nSkin * nTotal / (notSkinHistR[bin]))
-		pGreen2.append(math.exp(skinHistG[bin]) / nSkin * nTotal / (notSkinHistG[bin]))'''
-
-	return {pRed, pGreen}
+	return [pRed, pGreen]
 
 
 def colorScore(image2, coordinates, profile):
@@ -73,8 +68,8 @@ def colorScore(image2, coordinates, profile):
 		row = []
 		for j in range(coordinates[0][1], coordinates[1][1] + 1):
 			#adjust intensity r = R/(R+G+B)
-			intensity = float(image2.getpixel[i][j][0] + image2.getpixel[i][j][1] + image2.getpixel[i][j][2])
-			row.append((image2.getpixel[i][j][0] / intensity, image2.getpixel[i][j][1] / intensity))
+			intensity = float(image2[i][j][0] + image2[i][j][1] + image2[i][j][2])
+			row.append((image2[i][j][0] / intensity, image2[i][j][1] / intensity))
 		pixelData2.append(row)
 
 	score = float(0)
@@ -96,3 +91,26 @@ def colorScore(image2, coordinates, profile):
 	score /= len(pixelData2)*len(pixelData2[0])
 
 	return score
+
+def getPixelP(profile, pixel, bins):
+	intensity = pixel[0] + pixel[1] + pixel[2] + 1
+	r = float(pixel[0]) / intensity
+	g = float(pixel[1]) / intensity
+	x = 0.0
+	y = 0.0
+	pRed = profile[0]
+	pGreen = profile[1]
+	if(r > .7 and g > .7):
+		x = pRed[bins - 1]
+		y = pGreen[bins - 1]
+	elif(r > .7):
+		x = pRed[bins - 1]
+		y = pGreen[int(g / (.7 / (bins - 1)))]
+	elif(g > .7):
+		x = pRed[int(r / (.7 / (bins - 1)))]
+		y = pGreen[bins - 1]
+	else:
+		x = pRed[int(r / (.7 / (bins - 1)))]
+		y = pGreen[int(g / (.7 / (bins - 1)))]
+	print x*y
+	return x * y

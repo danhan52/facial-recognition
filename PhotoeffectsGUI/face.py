@@ -17,6 +17,10 @@ class Face:
 		self.tWeight = weights[1]
 		self.wWeight = weights[2]
 		
+		#Kalman filters for top left and bottom right
+		self.rightKalman = cv2.cv.CreateKalman(4, 2, 0)
+		self.leftKalman = cv2.cv.CreateKalman(4, 2, 0) 
+		self.predictedPosition = []
 		# list of mini-images that are attached to the face
 		# (each entry contains info about what the image is, where it is, area, etc.)
 		self.attachedObjects = []  
@@ -44,6 +48,9 @@ class Face:
 			self.prevPositions.append(self.position)
 			self.position = [(rects[0],rects[1]),(rects[2],rects[3]),dt.datetime.now()]
 			self.timeSinceDetection = 0
+			
+	def getPredictedPosition(self):
+		return self.predictedPosition
 
 	def getID(self):
 		return self.id
@@ -67,31 +74,6 @@ class Face:
 	def setObscured(self, truthVal):
 		self.obscured = truthVal
 
-	# def scoreForBeingHere(self, face, rect):
-	# 	"""compares face and rect to sees what the chances are that they are the same
-	# 	returns float between 0 and 1"""
-	# 	time = dt.datetime.now()
-	# 	if not (self.position==[]):
-	# 		self.getVelocity()
-	# 		# get time change
-	# 		deltaTime = (time - self.position[2]).total_seconds()
-	# 		# get size change
-	# 		width = self.getWidth()
-	# 		rectWidth = abs(rect[0]-rect[2])
-	# 		diffWidths = abs(width-rectWidth)/width
-	# 		# get position change
-	# 		middleOfRect = ((rect[2]+rect[0])/2,(rect[3]+rect[1])/2)
-	# 		middleOfFace = ((self.position[1][0]+self.position[0][0])/2,(self.position[1][1]+self.position[0][1])/2)
-	# 		# if velocity != 0:
-	# 		# 	middleOfFace = (middleOfFace[0] + velocity[0]/velocity[2]*deltaTime*self.velocityWeight, middleOfFace[1] + velocity[1]/velocity[2]*deltaTime*self.velocityWeight)
-	# 		diffMiddles = math.pow(math.pow(middleOfFace[0]-middleOfRect[0], 2) + math.pow(middleOfFace[1]-middleOfRect[1], 2), 0.5)
-			
-	# 		linearScore = self.dWeight*diffMiddles+self.wWeight*diffWidths+self.tWeight*deltaTime
-	# 		score = 1/linearScore
-	# 		return score
-	# 	else:
-	# 		return 0
-
 	def estimateNextPosition(self, time):
 		"""Use velocity and most recent position
 		to calculate a new slightly modified position. Meant for when
@@ -99,8 +81,10 @@ class Face:
 		deltaTime = (time - self.position[2]).total_seconds()
 		self.getVelocity()
 		middleOfFace = ((self.position[1][0]+self.position[0][0])/2,(self.position[1][1]+self.position[0][1])/2)
-		if velocity != 0:
-			middleOfFace = (middleOfFace[0] + velocity[0]/velocity[2]*deltaTime*self.velocityWeight, middleOfFace[1] + velocity[1]/velocity[2]*deltaTime*self.velocityWeight)	
+		if self.velocity != 0:
+			dx = self.velocity[0]/self.velocity[2]*deltaTime
+			dy = self.velocity[1]/self.velocity[2]*deltaTime
+			middleOfFace = (middleOfFace[0] + dx, middleOfFace[1] + dy)	
 		return middleOfFace
 
 	def getVelocity(self):
@@ -115,6 +99,30 @@ class Face:
 			self.velocity = (xdist,ydist,time.total_seconds())
 		return self.velocity
 			#speed = math.pow(math.pow(1.0*xdist,2) + math.pow(1.0*ydist,2),0.5) / (1.0*time.total_seconds())
+
+	def getTopLeftVelocity(self):
+		"""Use last detected position and most recent detected position
+		to estimate how fast the face is moving"""
+		if len(self.prevPositions) < 2:
+			self.velocity = (0,0,0)
+		else:
+			time = self.position[2] - self.prevPositions[len(self.prevPositions)-1][2]
+			xdist = self.position[0][0] - self.prevPositions[len(self.prevPositions)-1][0][0]
+			ydist = self.position[0][1] - self.prevPositions[len(self.prevPositions)-1][0][1]
+			self.velocity = (xdist,ydist,time.total_seconds())
+		return self.velocity
+
+	def getBotRightVelocity(self):
+		"""Use last detected position and most recent detected position
+		to estimate how fast the face is moving"""
+		if len(self.prevPositions) < 2:
+			self.velocity = (0,0,0)
+		else:
+			time = self.position[2] - self.prevPositions[len(self.prevPositions)-1][2]
+			xdist = self.position[1][0] - self.prevPositions[len(self.prevPositions)-1][1][0]
+			ydist = self.position[1][1] - self.prevPositions[len(self.prevPositions)-1][1][1]
+			self.velocity = (xdist,ydist,time.total_seconds())
+		return self.velocity
 
 	def update(self, pos):
 		"""Calls most of the above methods to give a complete and new
