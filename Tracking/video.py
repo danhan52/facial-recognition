@@ -32,10 +32,10 @@ class Video:
 			self.timeOut = 15
 			self.cleanThresh = 5
 			self.binNum = 100
-			self.weights = (1,1,1)
+			self.weights = (0.5,0,0.5)
 			self.writing = False
-			self.deviation = (400, 0.5, 0.4)
-			self.framesback = 5
+			self.deviation = (200, 0.34, 0.25)
+			self.framesback = 2
 		# add a catch statement for if variable list isn't of length 6
 		else:
 			# Always between 0 and 1
