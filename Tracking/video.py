@@ -352,7 +352,7 @@ class Video:
 
 #		return [(int(top_left[0]),int(top_left[1])), (int(bot_right[0]),int(bot_right[1]))]
 
-	#.9 is arbitrary value
+	#.3 is arbitrary value
 	def colorEstimateNextPosition(self, face):
 		print "hi"
 		framew = int(self.vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
@@ -382,7 +382,7 @@ class Video:
 				for j in range(height):
 					p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] + i], self.binNum)
 			p /= 2*height
-			if(p < .9*pAve): #VALUE
+			if(p < .3*pAve): #VALUE
 				newPosition[0][1] += 2
 				width -= 2
 				if(newPosition[0][1] >= newPosition[1][1]):
@@ -397,7 +397,7 @@ class Video:
 				for j in range(height):
 					p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] - i - 1], self.binNum)
 			p /= 2*height
-			if(p > .9*pAve): #VALUE
+			if(p > .3*pAve): #VALUE
 				newPosition[0][0] -= 2
 				width += 2
 				if(newPosition[0][1] < 0):
@@ -414,7 +414,7 @@ class Video:
 				for j in range(height):
 					p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[1][1] - i], self.binNum)
 			p /= 2*height
-			if(p < .9*pAve): #VALUE
+			if(p < .3*pAve): #VALUE
 				newPosition[1][0] -= 2
 				width -= 2
 				if(newPosition[0][1] >= newPosition[1][1]):
@@ -429,7 +429,7 @@ class Video:
 				for j in range(height):
 					p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[1][1] + i + 1], self.binNum)
 			p /= 2*height
-			if(p > .9*pAve): #VALUE
+			if(p > .3*pAve): #VALUE
 				newPosition[1][1] += 2
 				width += 2
 				if(newPosition[1][1] >= framew):
@@ -446,7 +446,7 @@ class Video:
 				for j in range(width):
 					p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + i][newPosition[0][1] + j], self.binNum)
 			p /= 2*width
-			if(p < .9*pAve): #VALUE
+			if(p < .3*pAve): #VALUE
 				newPosition[0][0] += 2
 				height -= 2
 				if(newPosition[0][0] >= newPosition[1][0]):
@@ -461,7 +461,7 @@ class Video:
 				for j in range(width):
 					p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] - 1 - i][newPosition[0][1] + j], self.binNum)
 			p /= 2*width
-			if(p > .9*pAve): #VALUE
+			if(p > .3*pAve): #VALUE
 				newPosition[0][0] -= 2
 				height += 2
 				if(newPosition[0][0] < 0):
@@ -478,7 +478,7 @@ class Video:
 				for j in range(width):
 					p += getPixelP(face.colorProfile, self.frameImage[newPosition[1][0] - i][newPosition[0][1] + j], self.binNum)
 			p /= 2*width
-			if(p < .9*pAve): #VALUE
+			if(p < .3*pAve): #VALUE
 				newPosition[1][0] -= 2
 				height -= 2
 				if(newPosition[0][0] >= newPosition[1][0]):
@@ -493,7 +493,7 @@ class Video:
 				for j in range(width):
 					p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + 1 + i][newPosition[0][1] + j], self.binNum)
 			p /= 2*width
-			if(p > .9*pAve): #VALUE
+			if(p > .3*pAve): #VALUE
 				newPosition[1][0] -= 2
 				height += 2
 				if(newPosition[1][0] >= frameh-1):
@@ -586,11 +586,15 @@ class Video:
 		for i in range(len(self.notVisibleFaceList)):
 #			if self.notVisibleFaceList[i].predictedPosition != []:
 #				self.showRectangle(self.notVisibleFaceList[i].predictedPosition, self.notVisibleFaceList[i].getID())
-			self.showRectangle(self.colorEstimateNextPosition(self.notVisibleFaceList[i]), self.notVisibleFaceList[i].getID())
+			self.showRectangle2(self.colorEstimateNextPosition(self.notVisibleFaceList[i]), self.notVisibleFaceList[i].getID())
 		cv2.imshow("show", self.frameImage)
 
 	def showRectangle(self, pos, IDnum):
 		cv2.rectangle(self.frameImage, pos[0], pos[1], (255,0,0), 2)
+		cv2.putText(self.frameImage, str(IDnum), pos[0], cv2.FONT_HERSHEY_SIMPLEX, 2, [0,255,0], 3)
+
+	def showRectangle2(self, pos, IDnum):
+		cv2.rectangle(self.frameImage, pos[0], pos[1], (0,0,255), 2)
 		cv2.putText(self.frameImage, str(IDnum), pos[0], cv2.FONT_HERSHEY_SIMPLEX, 2, [0,255,0], 3)
 
 	def endWindow(self):

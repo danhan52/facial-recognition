@@ -10,6 +10,8 @@ from sortings import *
 class Video:
 	def __init__(self, vidSource, variableList=[], showWindow=True):
 		self.vidcap = cv2.VideoCapture(vidSource)
+		# self.vidcap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 500);
+		# self.vidcap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 500);
 		self.cascade = cv2.CascadeClassifier("face_cascade2.xml")
 		self.visibleFaceList = []		# contains all Face objects within the frame
 		self.notVisibleFaceList = []
@@ -142,6 +144,11 @@ class Video:
 				if (i not in usedRects):
 #					print "Make new face"
 					self.addNewFace(rects[i])
+		for face in self.visibleFaceList:
+			self.updateKalman(face)
+			# face.colorProfile = setProfile(self.frameImage,face.getPosition(),self.binNum)
+		for face in self.notVisibleFaceList:
+			self.updateKalman(face)
 
 
 	def scoreForBeingHere(self, face, rect):
@@ -243,6 +250,7 @@ class Video:
 		self.previousFrame = self.frameImage
 		success, self.frameImage = self.vidcap.read()
 		self.frameImage = cv2.flip(self.frameImage,1)
+		# cv2.resize(self.frameImage,  (500, 500), 0, 0, cv2.INTER_CUBIC);
 		return success, self.frameImage
 
 	def display(self):

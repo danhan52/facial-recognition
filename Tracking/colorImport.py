@@ -5,13 +5,14 @@ def setProfile(image, coordinates, bins):
 	#put {R,G} tuples in 2D-array
 	imageWidth = len(image)
 	imageHeight = len(image[0])
+	print imageHeight, imageWidth
 	pixelData = []
-	for i in range(imageWidth, 10):
+	for i in range(0, imageWidth, 10):
 		row = []
-		for j in range(imageHeight, 10):
+		for j in range(0, imageHeight, 10):
 			#adjust intensity r = R/(R+G+B)
-			intensity = float(image[i][j][0] + image.getpixel[i][j][1] + image.getpixel[i][j][2] + 1)
-			row.append((image.getpixel[i][j][0] / intensity, image.getpixel[i][j][1] / intensity))
+			intensity = float(image[i][j][0] + image[i][j][1] + image[i][j][2] + 1)
+			row.append((image[i][j][0] / intensity, image[i][j][1] / intensity))
 			#FOR LATER, GROUP ANYTHING ABOVE .7
 		pixelData.append(row)
 
@@ -27,8 +28,8 @@ def setProfile(image, coordinates, bins):
 		notSkinHistG.append(1)
 
 	#nSkin = 0 #nSkin not used right now
-	for x in range(imageWidth, 10):
-		for y in range(imageHeight, 10):
+	for x in range(0, imageWidth, 10):
+		for y in range(0, imageHeight, 10):
 			#assuming better accuracy by assuming face is a diamond.  checking if pixel is outside of the face
 			if(y + x * imageHeight / imageWidth <= imageHeight / 2 or y - x * imageHeight / imageWidth >= imageHeight / 2 or y + x * imageHeight / imageWidth >= 1.5 * imageHeight or y - x * imageHeight / imageWidth <= -0.5 * imageHeight):
 				if(pixelData[x][y][0] > .7):
@@ -67,8 +68,8 @@ def colorScore(image2, coordinates, profile):
 		row = []
 		for j in range(coordinates[0][1], coordinates[1][1] + 1):
 			#adjust intensity r = R/(R+G+B)
-			intensity = float(image2.getpixel[i][j][0] + image2.getpixel[i][j][1] + image2.getpixel[i][j][2])
-			row.append((image2.getpixel[i][j][0] / intensity, image2.getpixel[i][j][1] / intensity))
+			intensity = float(image2[i][j][0] + image2[i][j][1] + image2[i][j][2])
+			row.append((image2[i][j][0] / intensity, image2[i][j][1] / intensity))
 		pixelData2.append(row)
 
 	score = float(0)
@@ -111,4 +112,5 @@ def getPixelP(profile, pixel, bins):
 	else:
 		x = pRed[int(r / (.7 / (bins - 1)))]
 		y = pGreen[int(g / (.7 / (bins - 1)))]
+	print x*y
 	return x * y
