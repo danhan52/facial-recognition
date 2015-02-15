@@ -11,7 +11,7 @@ from video import Video
 	# self.weights = (variableList[4], variableList[5], variableList[6])
 
 def goGetEm():
-	minRemovalScore = 0.1
+	minRemovalScore = 0.25
 	timeOut = 10
 	cleanThresh = 5
 	binNumber = 100
@@ -21,12 +21,20 @@ def goGetEm():
 	weights = (distanceWeight, timeWeight, sizeWeight)
 	writingToFiles = True
 	distDev = 200
-	timeDev = 0.34
+	timeDev = 1
 	sizeDev = 0.25
 	devs = (distDev, timeDev, sizeDev)
 	framesback = 5
+
+	# minRemovals = [0.0001, 0.1, 0.25]
+	# weightDev = [((0.5,0,0.5),(100,0.34,0.15)),((0.5,0,0.5),(200,0.34,0.25)),((0.45,0.2,0.35),(100,0.34,0.15)),((0.45,0.2,0.35),(200,0.34,0.25))]
+	i = 0
+	# for minRemovalScore in minRemovals:
+	# 	for setting in weightDev:
+			# weights = setting[0]
+			# devs = setting[1]
 	variables = [minRemovalScore, timeOut, cleanThresh, binNumber, weights, writingToFiles, devs, framesback]
-	vidFile = "outvid.avi"
+	vidFile = "datums/outvideo"+str(i)+".avi"
 	vid = Video("Testvideos/Movie1.mov", variables, False)
 	vid.openVidWrite(vidFile)
 	success = vid.readFrame()
@@ -35,5 +43,6 @@ def goGetEm():
 		vid.writeToVideo()
 		success = vid.readFrame()
 	vid.endWindow()
+			# i += 1
 
 goGetEm()
