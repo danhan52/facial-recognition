@@ -528,4 +528,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    import cProfile
+    cProfile.run('main()')
