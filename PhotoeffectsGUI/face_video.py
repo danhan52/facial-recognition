@@ -123,18 +123,19 @@ class FaceOptions(QWidget):
         self.grid = QGridLayout()
         self.old_face_pics = []
         self.old_checks = []
+        self.count = 0
         
         
     def setFaces(self, face_pics, faces):
         self.faces = faces
         self.face_pics = face_pics
-        
+        self.count += 1
 #        self.face_ids_new = [f.getID() for f in self.faces if not f.obscured]
 #        print "old vs. new face_IDS:", self.face_ids_new
         self.face_ids = [f.getID() for f in self.faces]
         #print "old vs. new face_IDS:", self.old_face_ids, self.face_ids
         #print "checked boxes:", [c.isChecked() for c in self.checkboxes]
-        if set(self.old_face_ids) != set(self.face_ids):
+        if set(self.old_face_ids) != set(self.face_ids) or (self.count%50 == 0):
             self.draw()
 #        self.draw()
 #        if set(self.old_face_ids) != set(self.face_ids_new):
@@ -287,6 +288,7 @@ class ImageBox(QWidget):
         self.grid = QGridLayout()
         self.pixmap = None
         self.face_pics = []
+        self.all_faces = []
         #self.draw()
         #self.faces = []
         
@@ -295,6 +297,7 @@ class ImageBox(QWidget):
         self.pixmap = img
         self.draw_objects(faces)
         self.face_pics = face_pics
+        self.all_faces = faces
         
     def draw(self):
         self.piclabel.setPixmap(self.pixmap)
@@ -332,7 +335,7 @@ class ImageBox(QWidget):
             if not face.isObscured():
                 tuples = face.getPosition()
                 rect = [tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]]
-                for icon_name, icon_id in face.attachedObjects:
+                for icon_name, id_to_swap in face.attachedObjects:
                     overlay = QPixmap(os.path.join("icons", icon_name))
                     overlay_copy = overlay.copy()
                     width = rect[2]-rect[0]
@@ -370,17 +373,21 @@ class ImageBox(QWidget):
                         for face in faces:
                             face.attachedObjects = []       
                     elif icon_name == "faceswap.png": 
-                        index_to_swap = icon_id
-                        #if (icon_id < 0) or (icon_id not in [f.getID for f in faces]):
-                        if (icon_id < 0):
+                        face_to_swap = [f for f in self.all_faces if f.id == id_to_swap]
+                        while not face_to_swap:
                             index_to_swap = randint(0, len(self.face_pics) - 1)
-                            while index_to_swap == faces.index(face):
+                            while index_to_swap == self.all_faces.index(face):
                                 index_to_swap = randint(0, len(self.face_pics) - 1)
-                            face.removeAttachedObject(("faceswap.png", icon_id))
-                            face.addAttachedObject(("faceswap.png", index_to_swap))
-                        overlay_copy = QPixmap(self.face_pics[index_to_swap])
+                            face.removeAttachedObject(("faceswap.png", id_to_swap))
+                            id_to_swap = self.all_faces[index_to_swap].id
+                            face.addAttachedObject(("faceswap.png", id_to_swap))
+                            face_to_swap = [f for f in self.all_faces if f.id == id_to_swap]
+                        pic = self.face_pics[self.all_faces.index(face_to_swap[0])]
+                        
+                        overlay_copy = QPixmap(pic)
                         overlay_copy = overlay_copy.scaledToWidth(width)
                         painter.drawPixmap(rect[0], rect[1], overlay_copy)
+                            
                         
                     else:
                         print "Not implemeneted yet"
@@ -399,6 +406,11 @@ class GuiWindow(QWidget):
         self.face_list = []
         self.draw_nums = False
         self.draw()
+        self.connect(self, Qt.SIGNAL('triggered()'), self.closeEvent)
+        
+        
+    def closeEvent(self, e):
+        sys.exit()
         
         
 
@@ -453,6 +465,7 @@ class GuiWindow(QWidget):
             face_pics = get_imgs_from_rects(image, rects)
            
             if cv2.waitKey(1) & 0xFF == ord('q'):
+                vid.endWindow()
                 break
                 
             self.leftbox.set_image(pixmap, self.face_list, face_pics)
@@ -460,6 +473,7 @@ class GuiWindow(QWidget):
             
             self.setLayout(grid)
             self.show()
+
             
     def toggle_nums(self):
         self.draw_nums = not self.draw_nums
@@ -524,9 +538,11 @@ def get_imgs_from_rects(img, rects):
 def main():
     app = QApplication(sys.argv)
     face_window = GuiWindow()
-    sys.exit(app.exec_())
+    print "made it to the end"
+    sys.exit()
 
 
 if __name__ == '__main__':
-    import cProfile
-    cProfile.run('main()')
+#    import cProfile
+#    cProfile.run('main()')
+    main()

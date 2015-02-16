@@ -1,25 +1,26 @@
 GUI To-Do List:
 
 
-* fix face swap--various
+√ fix face swap--various
 * improve screenshot (make a window only screenshot)
 ~√ fixed-size-across face grid
 ~√ make small pics work better
+√ make window close
 
 
 Discuss with Jeff:
-* make less laggy
+~√ make less laggy
 
 
 Discuss with others:
-* Mirror image display
-* merge
+√ Mirror image display
+√ merge
 * make showVid=False work?
 
 
 Low priority:
 * make play/pause work
-* GAME (pong? block bouncing?)
+x GAME (pong? block bouncing?)
 
 
 
