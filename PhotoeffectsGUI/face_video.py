@@ -423,7 +423,7 @@ class GuiWindow(QWidget):
         self.rightbox = ControlBox(self)
         grid.addWidget(self.rightbox, 0, 1)
         
-        variables = (0.25, 10, 5, 100, (1,1,1), False, (200,0.34,0.25), 2)
+        variables = (0.25, 10, 5, 100, (0.5,0,0.5), False, (200.0,0.34,0.25), 2)
         #vid = Video(0,variables, showWindow=False)
         vid = Video(0,variables)
         

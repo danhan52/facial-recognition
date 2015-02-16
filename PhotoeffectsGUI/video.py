@@ -28,14 +28,14 @@ class Video:
 		#####TWEAKABLE VARIABLES#####
 		if variableList == []:
 			# Always between 0 and 1
-			self.minRemovalScore = 0.1
+			self.minRemovalScore = 0.25
 			# Probably always larger than one
 			self.timeOut = 15
 			self.cleanThresh = 5
 			self.binNum = 100
 			self.weights = (1,1,1)
 			self.writing = False
-			self.deviation = (200, 0.34, 0.25)
+			self.deviation = (200.0, 0.34, 0.25)
 			self.framesback = 2
 		# add a catch statement for if variable list isn't of length 6
 		else:
