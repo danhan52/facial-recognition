@@ -1,11 +1,11 @@
 GUI To-Do List:
 
 
-√ fix face swap--various
+
 * improve screenshot (make a window only screenshot)
 ~√ fixed-size-across face grid
 ~√ make small pics work better
-√ make window close
+
 
 
 Discuss with Jeff:
@@ -29,3 +29,5 @@ Done! Yay!
 √ take out unnecessary draw options
 √ add numbers as option (on/off)
 √ figure out why same tracking code is always worse when we do it
+√ fix face swap--various
+√ make window close

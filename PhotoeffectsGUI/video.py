@@ -10,8 +10,8 @@ from sortings import *
 class Video:
 	def __init__(self, vidSource, variableList=[], showWindow=True):
 		self.vidcap = cv2.VideoCapture(vidSource)
-		self.vidcap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 400);
-#		self.vidcap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 500);
+		self.vidcap.set(cv2.cv.CV_CAP_PROP_FRAME_WIDTH, 600);
+		self.vidcap.set(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT, 380);
 		self.cascade = cv2.CascadeClassifier("face_cascade2.xml")
 		self.visibleFaceList = []		# contains all Face objects within the frame
 		self.notVisibleFaceList = []
@@ -250,7 +250,7 @@ class Video:
 		self.previousFrame = self.frameImage
 		success, self.frameImage = self.vidcap.read()
 		self.frameImage = cv2.flip(self.frameImage,1)
-		cv2.resize(self.frameImage,  (400, 400), 0, 0, cv2.INTER_CUBIC);
+		cv2.resize(self.frameImage,  (600, 380), 0, 0, cv2.INTER_CUBIC);
 		return success, self.frameImage
 
 	def display(self):

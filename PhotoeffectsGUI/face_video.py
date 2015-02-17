@@ -373,6 +373,8 @@ class ImageBox(QWidget):
                         for face in faces:
                             face.attachedObjects = []       
                     elif icon_name == "faceswap.png": 
+                        
+                        #FIX INFINITE LOOP
                         face_to_swap = [f for f in self.all_faces if f.id == id_to_swap]
                         while not face_to_swap:
                             index_to_swap = randint(0, len(self.face_pics) - 1)
@@ -437,7 +439,11 @@ class GuiWindow(QWidget):
             
             if self.draw_nums:
                 for i in range(len(self.face_list)):
-                    vid.showRectangle(self.face_list[i].getPosition(),self.face_list[i].getID())
+                    #vid.showRectangle(self.face_list[i].getPosition(),self.face_list[i].getID())
+                    if not face.isObscured():
+                        vid.showRectangle(self.face_list[i].getPosition(),self.face_list[i].getID())
+                    else:
+                        vid.showRectangle(self.face_list[i].getPredictedPosition(),self.face_list[i].getID())
                 
                 
                 
@@ -445,9 +451,14 @@ class GuiWindow(QWidget):
             
             rects = []
             #self.face_list = vid.getFaces()
+            #CHANGE IF OBSCURED
             for face in self.face_list:
-                tuples = face.getPosition()
-                rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
+                if not face.isObscured():
+                    tuples = face.getPosition()
+                    rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
+                else:
+                    tuples = face.getPredictedPosition()
+                    rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
                 #print face.getID()
                 
 
