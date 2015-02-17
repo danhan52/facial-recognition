@@ -1,62 +1,60 @@
 from PIL import Image
 import math
 
-def setProfile(image, coordinates, bins):
-	#put {R,G} tuples in 2D-array
-	imageWidth = len(image)
-	imageHeight = len(image[0])
-	print imageHeight, imageWidth
-	pixelData = []
-	for i in range(0, imageWidth, 10):
-		row = []
-		for j in range(0, imageHeight, 10):
-			#adjust intensity r = R/(R+G+B)
-			intensity = float(image[i][j][0] + image[i][j][1] + image[i][j][2] + 1)
-			row.append((image[i][j][0] / intensity, image[i][j][1] / intensity))
-			#FOR LATER, GROUP ANYTHING ABOVE .7
-		pixelData.append(row)
+def setProfile(image, coordinate, bins):
+    #change to y-x instead of x-y coordinates
+    coordinates = [[0,0],[0,0]]
+    coordinates[0][0] = coordinate[0][1]
+    coordinates[0][1] = coordinate[0][0]
+    coordinates[1][0] = coordinate[1][1]
+    coordinates[1][1] = coordinate[1][0]
+    imageHeight = len(image)
+    imageWidth = len(image[0])
 
-	#are there enough pixels for it to be 2D array?  increase bin size as result?
-	skinHistR = []
-	skinHistG = []
-	notSkinHistR = []
-	notSkinHistG = []
-	for i in range(bins): #append 1's to avoid future divide by zero problems
-		skinHistR.append(1)
-		skinHistG.append(1)
-		notSkinHistR.append(1)
-		notSkinHistG.append(1)
+    #are there enough pixels for it to be 2D array?  increase bin size as result?
+    skinHistR = []
+    skinHistG = []
+    notSkinHistR = []
+    notSkinHistG = []
+    for i in range(bins): #append 1's to avoid future divide by zero problems
+            skinHistR.append(1)
+            skinHistG.append(1)
+            notSkinHistR.append(1)
+            notSkinHistG.append(1)
 
-	#nSkin = 0 #nSkin not used right now
-	for x in range(0, imageWidth, 10):
-		for y in range(0, imageHeight, 10):
-			#assuming better accuracy by assuming face is a diamond.  checking if pixel is outside of the face
-			if(y + x * imageHeight / imageWidth <= imageHeight / 2 or y - x * imageHeight / imageWidth >= imageHeight / 2 or y + x * imageHeight / imageWidth >= 1.5 * imageHeight or y - x * imageHeight / imageWidth <= -0.5 * imageHeight):
-				if(pixelData[x][y][0] > .7):
-					notSkinHistR[bins - 1] += 1
-				else:
-					notSkinHistR[int((pixelData[x][y][0]) / (.7 / (bins - 1)))] += 1
-				if(pixelData[x][y][1] > .7):
-					notSkinHistG[bins - 1] += 1
-				else:
-					notSkinHistG[int((pixelData[x][y][1]) / (.7 / (bins - 1)))] += 1
-			else:
-				if(pixelData[x][y][0] > .7):
-					skinHistR[bins - 1] += 1
-				else:
-					skinHistR[int((pixelData[x][y][0]) / (.7 / (bins - 1)))] += 1
-				if(pixelData[x][y][1] > .7):
-					skinHistG[bins - 1] += 1
-				else:
-					skinHistG[int((pixelData[x][y][1]) / (.7 / (bins - 1)))] += 1
-				#nSkin += 1
+    #nSkin = 0 #nSkin not used right now
+    for x in range(0, imageHeight, 5):
+            for y in range(0, imageWidth, 5):
+                intensity = float(image[x][y][0] + image[x][y][1] + image[x][y][2] + 1)
+                R = image[x][y][0] / intensity
+                G = image[x][y][1] / intensity
+                #check if pixel is with face box
+                if(x < coordinates[0][0] or y < coordinates[0][1] or x > coordinates[1][0] or y > coordinates[1][1]):
+                    if(R > .7):
+                        notSkinHistR[bins - 1] += 1
+                    else:
+                        notSkinHistR[int(R / (.7 / (bins - 1)))] += 1 #got rid of pixelData, which was R / intensity, for sake of time wasted constructing that array
+                    if(G > .7):
+                        notSkinHistG[bins - 1] += 1
+                    else:
+                        notSkinHistG[int(G / (.7 / (bins - 1)))] += 1
+                else:
+                    if(R > .7):
+                        skinHistR[bins - 1] += 1
+                    else:
+                        skinHistR[int(R / (.7 / (bins - 1)))] += 1
+                    if(G > .7):
+                        skinHistG[bins - 1] += 1
+                    else:
+                        skinHistG[int(G / (.7 / (bins - 1)))] += 1
+                    #nSkin += 1
 
-	pRed = [] #method 1 for calculating probability
-	pGreen = []
-	for bin in range(len(skinHistR)):
-		pRed.append(float(skinHistR[bin]) / (notSkinHistR[bin] + skinHistR[bin]))
-		pGreen.append(float(skinHistG[bin]) / (notSkinHistG[bin] + skinHistG[bin]))
-	return [pRed, pGreen]
+    pRed = [] #method 1 for calculating probability
+    pGreen = []
+    for bin in range(len(skinHistR)):
+        pRed.append(float(skinHistR[bin]) / (notSkinHistR[bin] + skinHistR[bin]))
+        pGreen.append(float(skinHistG[bin]) / (notSkinHistG[bin] + skinHistG[bin]))
+    return [pRed, pGreen]
 
 
 def colorScore(image2, coordinates, profile):
@@ -112,5 +110,4 @@ def getPixelP(profile, pixel, bins):
 	else:
 		x = pRed[int(r / (.7 / (bins - 1)))]
 		y = pGreen[int(g / (.7 / (bins - 1)))]
-	print x*y
 	return x * y
