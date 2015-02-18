@@ -373,22 +373,22 @@ class ImageBox(QWidget):
                         for face in faces:
                             face.attachedObjects = []       
                     elif icon_name == "faceswap.png": 
-                        
+                        if len(self.all_faces) >= 2:
                         #FIX INFINITE LOOP
-                        face_to_swap = [f for f in self.all_faces if f.id == id_to_swap]
-                        while not face_to_swap:
-                            index_to_swap = randint(0, len(self.face_pics) - 1)
-                            while index_to_swap == self.all_faces.index(face):
-                                index_to_swap = randint(0, len(self.face_pics) - 1)
-                            face.removeAttachedObject(("faceswap.png", id_to_swap))
-                            id_to_swap = self.all_faces[index_to_swap].id
-                            face.addAttachedObject(("faceswap.png", id_to_swap))
                             face_to_swap = [f for f in self.all_faces if f.id == id_to_swap]
-                        pic = self.face_pics[self.all_faces.index(face_to_swap[0])]
-                        
-                        overlay_copy = QPixmap(pic)
-                        overlay_copy = overlay_copy.scaledToWidth(width)
-                        painter.drawPixmap(rect[0], rect[1], overlay_copy)
+                            while not face_to_swap:
+                                index_to_swap = randint(0, len(self.face_pics) - 1)
+                                while index_to_swap == self.all_faces.index(face):
+                                    index_to_swap = randint(0, len(self.face_pics) - 1)
+                                face.removeAttachedObject(("faceswap.png", id_to_swap))
+                                id_to_swap = self.all_faces[index_to_swap].id
+                                face.addAttachedObject(("faceswap.png", id_to_swap))
+                                face_to_swap = [f for f in self.all_faces if f.id == id_to_swap]
+                            pic = self.face_pics[self.all_faces.index(face_to_swap[0])]
+
+                            overlay_copy = QPixmap(pic)
+                            overlay_copy = overlay_copy.scaledToWidth(width)
+                            painter.drawPixmap(rect[0], rect[1], overlay_copy)
                             
                         
                     else:
@@ -450,16 +450,18 @@ class GuiWindow(QWidget):
             frame = vid.getCurrentFrame()
             
             rects = []
-            #self.face_list = vid.getFaces()
+        
             #CHANGE IF OBSCURED
             for face in self.face_list:
+#                tuples = face.getPosition()
+#                rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
                 if not face.isObscured():
                     tuples = face.getPosition()
                     rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
                 else:
                     tuples = face.getPredictedPosition()
                     rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
-                #print face.getID()
+               
                 
 
             frame_as_string_in_between = frame.tostring()

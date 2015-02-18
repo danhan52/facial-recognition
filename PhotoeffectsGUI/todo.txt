@@ -1,26 +1,14 @@
 GUI To-Do List:
 
-
-
 * improve screenshot (make a window only screenshot)
-~√ fixed-size-across face grid
-~√ make small pics work better
-
-
-
-Discuss with Jeff:
-~√ make less laggy
+* make maximize better
+* make play/pause work/delete that shit
 
 
 Discuss with others:
-√ Mirror image display
-√ merge
-* make showVid=False work?
+* make showVid=False work? NOPEhahaha
+* Predicted Position problem
 
-
-Low priority:
-* make play/pause work
-x GAME (pong? block bouncing?)
 
 
 
@@ -31,3 +19,13 @@ Done! Yay!
 √ figure out why same tracking code is always worse when we do it
 √ fix face swap--various
 √ make window close
+√ Mirror image display
+√ merge
+
+~√ make less laggy
+~√ fixed-size-across face grid
+~√ make small pics work better
+
+
+Discuss with Jeff:
+√
