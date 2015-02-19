@@ -296,18 +296,9 @@ class Video:
 		
 	"""Prediction stuff"""
 	def updateKalman(self, face1):
-		# recentPosition = face1.getPosition()
-		# if face1.prevPositions[0]:
-		# 	recentPosition = face1.prevPositions[0]
-		# else:
 		recentPosition = face1.getPosition()
-
-		# 	middleOfFace = middle
-
-		# else:
-		# middleOfFace = ((recentPosition[1][0]+recentPosition[0][0])/2,(recentPosition[1][1]+recentPosition[0][1])/2)
-		# print middleOfFace
 		topLeft = (recentPosition[0])
+		# Initialize the kalman filter with the point, transition matrix and velocity equal to 0
 		if face1.leftKalman.state_pre[0,0] == 0.0:
 			face1.leftKalman.state_pre[0,0]  = topLeft[0]
 			face1.leftKalman.state_pre[1,0]  = topLeft[1]
@@ -326,7 +317,6 @@ class Video:
 			cv2.cv.SetIdentity(face1.leftKalman.measurement_noise_cov, cv2.cv.RealScalar(1e-1))
 			cv2.cv.SetIdentity(face1.leftKalman.error_cov_post, cv2.cv.RealScalar(0.1))
 
-		# print face1.getVelocity()
 		velocity = face1.getTopLeftVelocity()
 		time = dt.datetime.now()
 		deltaTime = (time - recentPosition[2]).total_seconds()
@@ -337,23 +327,15 @@ class Video:
 			xvel = 0
 			yvel = 0
 
-		# print xvel
-		# print yvel
-		# set Kalman Filter
+		# Predict with kalman filter
 		time = dt.datetime.now()
 		deltaTime = (time - recentPosition[2]).total_seconds()
 		kalman_prediction = cv2.cv.KalmanPredict(face1.leftKalman)
-
-		# framesback = 5
+		# we average the prediction point with the last "framesback" points
 		top_left = [0,0]
 		counter = max(len(face1.prevPositions)-1, 0)	
-		# print counter
-		# print "'"
-		# print counter
-		# print len(face1.prevPositions[counter])
 		if not counter < self.framesback and not self.framesback == 0:
 			while counter != len(face1.prevPositions)-self.framesback:
-				# print face1.prevPositions
 				top_left[0] += (face1.prevPositions[counter][0][0])
 				top_left[1] += (face1.prevPositions[counter][0][1])
 				counter-=1
@@ -364,9 +346,6 @@ class Video:
 		else:
 			top_left = [kalman_prediction[0,0], kalman_prediction[1,0]]
 
-		# face1.state_left = middle
-		# print kalman_prediction[0,0]
-		# print kalman_prediction[1,0]
 		rightPoints = cv2.cv.CreateMat(2, 1, cv2.cv.CV_32FC1)
 		rightPoints[0,0]=topLeft[0]
 		rightPoints[1,0]=topLeft[1]
@@ -376,8 +355,10 @@ class Video:
 		face1.leftKalman.state_pre[2,0]  = xvel
 		face1.leftKalman.state_pre[3,0]  = yvel
 
+		# Correct the kalman prediction with the actual face point
 		estimated = cv2.cv.KalmanCorrect(face1.leftKalman, rightPoints)
 		############################
+		# Here we initialize the bottom right point kalman filter in the same manner
 		botRight = (recentPosition[1])
 		if face1.rightKalman.state_pre[0,0] == 0.0:
 			face1.rightKalman.state_pre[0,0]  = botRight[0]
@@ -397,7 +378,6 @@ class Video:
 			cv2.cv.SetIdentity(face1.rightKalman.measurement_noise_cov, cv2.cv.RealScalar(1e-1))
 			cv2.cv.SetIdentity(face1.rightKalman.error_cov_post, cv2.cv.RealScalar(0.1))
 
-		# print face1.getVelocity()
 		velocity = face1.getBotRightVelocity()
 		time = dt.datetime.now()
 		deltaTime = (time - recentPosition[2]).total_seconds()
@@ -408,39 +388,21 @@ class Video:
 			xvel = 0
 			yvel = 0
 
-		# print xvel
-		# print yvel
-		# set Kalman Filter
-		# time = dt.datetime.now()
-		# deltaTime = (time - recentPosition[2]).total_seconds()
 		kalman_prediction = cv2.cv.KalmanPredict(face1.rightKalman)
-
-		# framesback = 5
 		bot_right = [0,0]
 		counter = max(len(face1.prevPositions)-1, 0)	
-		# print counter
-		# print "'"
-		# print counter
-		# print len(face1.prevPositions[counter])
 		if not counter < self.framesback and not self.framesback == 0:
 			while counter != len(face1.prevPositions)-self.framesback:
-				# print face1.prevPositions
 				bot_right[0] += (face1.prevPositions[counter][1][0])
 				bot_right[1] += (face1.prevPositions[counter][1][1])
 				counter-=1
 			bot_right[0] += kalman_prediction[0, 0]
-			# print middle[0]
 			bot_right[0] = bot_right[0]/self.framesback+1
 			bot_right[1] += kalman_prediction[1,0]
 			bot_right[1] = bot_right[1]/self.framesback+1
 		else:
 			bot_right = [kalman_prediction[0,0], kalman_prediction[1,0]]
-			# print middle
 
-		# print middle
-
-		# print kalman_prediction[0,0]
-		# print kalman_prediction[1,0]
 		rightPoints = cv2.cv.CreateMat(2, 1, cv2.cv.CV_32FC1)
 		rightPoints[0,0]=botRight[0]
 		rightPoints[1,0]=botRight[1]
@@ -453,4 +415,7 @@ class Video:
 		estimated = cv2.cv.KalmanCorrect(face1.rightKalman, rightPoints)
 		
 		prediction = [(int(top_left[0]),int(top_left[1])), (int(bot_right[0]),int(bot_right[1]))]
+		# if top_left[0] > bot_right[0] or top_left[1] > bot_right[1]:
+		# 	face1.predictedPosition = []
+		# else:
 		face1.predictedPosition = prediction
