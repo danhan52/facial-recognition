@@ -6,7 +6,7 @@ import csv
 import copy
 from face import Face
 from sortings import *
-from colorImport import *
+# from colorImport import *
 
 class Video:
 	def __init__(self, vidSource, variableList=[], showWindow=True):
@@ -144,7 +144,7 @@ class Video:
 					self.addNewFace(rects[i])
 		for face in self.visibleFaceList:
 			self.updateKalman(face)
-			face.colorProfile = setProfile(self.frameImage,face.getPosition(),self.binNum)
+			# face.colorProfile = setProfile(self.frameImage,face.getPosition(),self.binNum)
 		for face in self.notVisibleFaceList:
 			self.updateKalman(face)
 		# if self.writing:
@@ -544,9 +544,9 @@ class Video:
 			if len(self.visibleFaceList[i].getPrevPositions()) > self.cleanThresh:
 				self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].getID())
 		for i in range(len(self.notVisibleFaceList)):
-#			if self.notVisibleFaceList[i].predictedPosition != []:
-#				self.showRectangle(self.notVisibleFaceList[i].predictedPosition, self.notVisibleFaceList[i].getID())
-			self.showRectangle2(self.colorEstimateNextPosition(self.notVisibleFaceList[i]), self.notVisibleFaceList[i].getID())
+			if self.notVisibleFaceList[i].predictedPosition != []:
+				self.showRectangle(self.notVisibleFaceList[i].predictedPosition, self.notVisibleFaceList[i].getID())
+			# self.showRectangle2(self.colorEstimateNextPosition(self.notVisibleFaceList[i]), self.notVisibleFaceList[i].getID())
 		cv2.imshow("show", self.frameImage)
 
 	def showRectangle(self, pos, IDnum):
@@ -565,16 +565,22 @@ class Video:
 	"""Meant for testing"""
 	def openVidWrite(self, filen):
 		fourcc = int(cv2.cv.CV_FOURCC('I', 'Y', 'U', 'V'))
-		fps = self.vidcap.get(cv2.cv.CV_CAP_PROP_FPS)
+		fps = 10 #self.vidcap.get(cv2.cv.CV_CAP_PROP_FPS)
 		framew = int(self.vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
 		frameh = int(self.vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
 		self.vidwrite = cv2.VideoWriter()
 		self.vidwrite.open(filen,fourcc,fps,(framew,frameh))
+		print self.vidwrite.isOpened()
 
 	def writeToVideo(self):
 		if self.writing:
 			for i in range(len(self.visibleFaceList)):
-				self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].getID())
+				if len(self.visibleFaceList[i].getPrevPositions()) > self.cleanThresh:
+					self.showRectangle(self.visibleFaceList[i].getPosition(),self.visibleFaceList[i].getID())
+			for i in range(len(self.notVisibleFaceList)):
+				if len(self.notVisibleFaceList[i].getPrevPositions()) > self.cleanThresh:
+					if self.notVisibleFaceList[i].predictedPosition != []:
+						self.showRectangle(self.notVisibleFaceList[i].predictedPosition, self.notVisibleFaceList[i].getID())
 			self.vidwrite.write(self.frameImage)
 
 	def openCSVWrite(self, filen):
