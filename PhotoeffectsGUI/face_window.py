@@ -14,6 +14,8 @@ sys.path.append("/Accounts/collierk/COMPS/facial-recognition/Tracking")
 #from architecture import *
 import cv2
 #from PIL import Image
+from time import gmtime, strftime
+import subprocess
 
 
 class PictureButton(QPushButton):
@@ -75,8 +77,8 @@ class AddOptions(QWidget):
         grid = QGridLayout()
 
         count = 0
-        for img in os.listdir("icons"):
-            imgPath = os.path.join("icons", img)
+        for img in os.listdir("photo_icons"):
+            imgPath = os.path.join("photo_icons", img)
             button = PictureButton(imgPath,self.window)
             grid.addWidget(button, count/4, count % 4)
             button.clicked.connect(button.click)
@@ -153,23 +155,27 @@ class ControlBox(QWidget):
         self.setSizePolicy (
             QSizePolicy (
                 QSizePolicy.Expanding,
-                QSizePolicy.Expanding))
-        self.setMinimumSize(350, 600)
+                QSizePolicy.Fixed))
+        self.setMinimumSize(400, 600)
+        self.setMaximumSize(400, 700)
 
         self.draw()
 
     def draw(self):
         grid = QGridLayout()
         
-        ppbutton = QPushButton("Play/Pause")
-        ppbutton.setSizePolicy (
-            QSizePolicy (
-                QSizePolicy.Expanding,
-                QSizePolicy.Fixed))
-        ppbutton.setMinimumSize(200, 50)
-        grid.addWidget(ppbutton, 0, 0)
+#        ppbutton = QPushButton("Play/Pause")
+#        ppbutton.setSizePolicy (
+#            QSizePolicy (
+#                QSizePolicy.Expanding,
+#                QSizePolicy.Fixed))
+#        ppbutton.setMinimumSize(200, 50)
+#        grid.addWidget(ppbutton, 0, 0)
         
+        font = QFont("ArialMT",25)
+
         label = QLabel("Add effects to selected face(s)")
+        label.setFont(font)
         grid.addWidget(label,1,0,Qt.AlignHCenter)
         
         self.faceChecks = FaceOptions(self.faces, self.rects)
@@ -178,11 +184,11 @@ class ControlBox(QWidget):
         addOptions = AddOptions(self.window)
         grid.addWidget(addOptions, 3, 0)
         
-        label = QLabel("Draw")
-        grid.addWidget(label,4,0,Qt.AlignHCenter)
+#        label = QLabel("Draw")
+#        grid.addWidget(label,4,0,Qt.AlignHCenter)
         
-        drawOptions = DrawOptions()
-        grid.addWidget(drawOptions, 5, 0)
+#        drawOptions = DrawOptions()
+#        grid.addWidget(drawOptions, 5, 0)
         
         self.setLayout(grid)
 
@@ -206,6 +212,10 @@ class ImageBox(QWidget):
         self.pixmap = QPixmap("screenshot.jpg")
         self.piclabel = QLabel()
         self.grid = QGridLayout()
+        self.setSizePolicy (
+            QSizePolicy (
+                QSizePolicy.Expanding,
+                QSizePolicy.Expanding))
         self.draw()
         
     def draw(self):
@@ -214,13 +224,22 @@ class ImageBox(QWidget):
         width = self.pixmap.size().width()
         height = self.pixmap.size().height()
         relationship = float(width)/height
-        self.piclabel.setMaximumSize(relationship*500, 500)
-        self.piclabel.setMinimumSize(relationship*500, 500)
+#        self.piclabel.setMaximumSize(relationship*500, 500)
+        self.piclabel.setMinimumSize(relationship*600, 600)
         self.grid.addWidget(self.piclabel,0,0,1,3)
         
+        
         button = QPushButton("Screenshot")
+        button.clicked.connect(self.take_screenshot)
         self.grid.addWidget(button,1,1)
         self.setLayout(self.grid)
+        
+    def take_screenshot(self):
+        time_str = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+        name = "PhotoScreenshots/screenshot-" + time_str + ".jpg"
+        #call(["screencapture", '-l$(osascript', '-e', '"tell', 'app', '"Python"', 'to', 'id', 'of', 'window', '1")', "test.png"])
+        #subprocess.check_call('screencapture -l$(osascript -e \'tell app "Python" to id of window 1\') test.png')
+        subprocess.call(["screencapture", name])
         
     def draw_object(self,rects,icon_name):
         '''Redraws main image to include clicked item/effect for given faces.'''

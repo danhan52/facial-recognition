@@ -212,11 +212,13 @@ class ControlBox(QWidget):
         self.faces = []
         self.rects = []
         self.window = window
+        #TALK TO GROUP HERE
         self.setSizePolicy (
             QSizePolicy (
                 QSizePolicy.Expanding,
-                QSizePolicy.Expanding))
+                QSizePolicy.Fixed))
         self.setMinimumSize(400, 600)
+        self.setMaximumSize(400, 700)
         self.grid = QGridLayout()
         self.faceChecks = FaceOptions()
         self.draw()
@@ -231,15 +233,19 @@ class ControlBox(QWidget):
         self.grid.addWidget(self.faceChecks, 2, 0)
 
     def draw(self):
-        ppbutton = QPushButton("Play/Pause")
-        ppbutton.setSizePolicy (
-            QSizePolicy (
-                QSizePolicy.Expanding,
-                QSizePolicy.Fixed))
-        ppbutton.setMinimumSize(200, 50)
-        self.grid.addWidget(ppbutton, 0, 0)
+#        ppbutton = QPushButton("Play/Pause")
+#        ppbutton.setSizePolicy (
+#            QSizePolicy (
+#                QSizePolicy.Expanding,
+#                QSizePolicy.Fixed))
+#        ppbutton.setMinimumSize(200, 50)
+#        self.grid.addWidget(ppbutton, 0, 0)
         
+        font = QFont("ArialMT",25)
+
+    
         label = QLabel("Add effects to selected face(s)")
+        label.setFont(font)
         self.grid.addWidget(label,1,0,Qt.AlignHCenter)
         
         addOptions = AddOptions(self.window)
@@ -292,6 +298,12 @@ class ImageBox(QWidget):
         #self.draw()
         #self.faces = []
         
+        self.setSizePolicy (
+            QSizePolicy (
+                QSizePolicy.Expanding,
+                QSizePolicy.Expanding))
+#        self.setMinimumSize(400, 600)
+        
     def set_image(self, img, faces, face_pics):
         #self.pixmap = QPixmap(img)
         self.pixmap = img
@@ -305,7 +317,7 @@ class ImageBox(QWidget):
         width = self.pixmap.size().width()
         height = self.pixmap.size().height()
         relationship = float(width)/height
-        self.piclabel.setMaximumSize(relationship*500, 500)
+#        self.piclabel.setMaximumSize(relationship*500, 500)
         self.piclabel.setMinimumSize(relationship*500, 500)
         self.grid.addWidget(self.piclabel,0,0,1,3)
         
@@ -356,6 +368,10 @@ class ImageBox(QWidget):
                         overlay_copy = overlay_copy.scaledToWidth(width)
                         amount_to_go_down = 0
                         painter.drawPixmap(rect[0], rect[1] + amount_to_go_down, overlay_copy)
+                    elif icon_name == "panda.png":
+                        overlay_copy = overlay_copy.scaledToWidth(width * 1.4)
+                        amount_to_go_down = -.2*height
+                        painter.drawPixmap(rect[0] - width/6.0, rect[1] + amount_to_go_down, overlay_copy)
                     elif icon_name == "blurry.jpg":
                         face_image = base.copy(rect[0]+5, rect[1]-10, width-10, height+20).toImage()
                         blurred_image = face_image.copy()
@@ -407,8 +423,10 @@ class GuiWindow(QWidget):
         QWidget.__init__(self)
         self.face_list = []
         self.draw_nums = False
+        self.setWindowTitle("Live Video Tracking with Effects!")
         self.draw()
         self.connect(self, Qt.SIGNAL('triggered()'), self.closeEvent)
+        
         
         
     def closeEvent(self, e):
@@ -439,11 +457,11 @@ class GuiWindow(QWidget):
             
             if self.draw_nums:
                 for i in range(len(self.face_list)):
-                    #vid.showRectangle(self.face_list[i].getPosition(),self.face_list[i].getID())
-                    if not face.isObscured():
-                        vid.showRectangle(self.face_list[i].getPosition(),self.face_list[i].getID())
-                    else:
-                        vid.showRectangle(self.face_list[i].getPredictedPosition(),self.face_list[i].getID())
+                    vid.showRectangle(self.face_list[i].getPosition(),self.face_list[i].getID())
+#                    if not face.isObscured():
+#                        vid.showRectangle(self.face_list[i].getPosition(),self.face_list[i].getID())
+#                    else:
+#                        vid.showRectangle(self.face_list[i].getPredictedPosition(),self.face_list[i].getID())
                 
                 
                 
@@ -453,14 +471,14 @@ class GuiWindow(QWidget):
         
             #CHANGE IF OBSCURED
             for face in self.face_list:
-#                tuples = face.getPosition()
-#                rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
-                if not face.isObscured():
-                    tuples = face.getPosition()
-                    rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
-                else:
-                    tuples = face.getPredictedPosition()
-                    rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
+                tuples = face.getPosition()
+                rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
+#                if not face.isObscured():
+#                    tuples = face.getPosition()
+#                    rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
+#                else:
+#                    tuples = face.getPredictedPosition()
+#                    rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
                
                 
 

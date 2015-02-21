@@ -1,8 +1,8 @@
 GUI To-Do List:
 
-* improve screenshot (make a window only screenshot)
-* make maximize better
-* make play/pause work/delete that shit
+X improve screenshot (make a window only screenshot)
+* talk to group re expanding
+* Make window title/text more polished
 
 
 Discuss with others:
@@ -21,6 +21,8 @@ Done! Yay!
 √ make window close
 √ Mirror image display
 √ merge
+√ make maximize better
+√ make play/pause work/delete that shit
 
 ~√ make less laggy
 ~√ fixed-size-across face grid
