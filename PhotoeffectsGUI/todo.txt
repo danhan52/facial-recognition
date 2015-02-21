@@ -1,13 +1,13 @@
 GUI To-Do List:
 
 X improve screenshot (make a window only screenshot)
-* talk to group re expanding
-* Make window title/text more polished
+√ talk to group re expanding
+√ Make window title/text more polished
 
 
 Discuss with others:
-* make showVid=False work? NOPEhahaha
-* Predicted Position problem
+x make showVid=False work? NOPEhahaha
+√ Predicted Position problem
 
 
 
@@ -24,7 +24,7 @@ Done! Yay!
 √ make maximize better
 √ make play/pause work/delete that shit
 
-~√ make less laggy
+√ make less laggy
 ~√ fixed-size-across face grid
 ~√ make small pics work better
 

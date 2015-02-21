@@ -144,7 +144,7 @@ class FaceOptions(QWidget):
 
     def draw(self):
         '''Note: don't call this except in initialization.'''
-        print "in draw"
+#        print "in draw"
         count = 0
         
         # This is bad. Don't uncomment.
@@ -172,7 +172,7 @@ class FaceOptions(QWidget):
             self.checkboxes.append(checkbox)
             self.grid.addWidget(checkbox, 3 + 2*(count/3), count % 3, Qt.AlignHCenter)
             count+=1
-            print "?:", count, 3 + 2*(count/3), count % 3
+#            print "?:", count, 3 + 2*(count/3), count % 3
             self.old_face_pics.append(piclabel)
             self.old_checks.append(checkbox)
             
@@ -218,7 +218,7 @@ class ControlBox(QWidget):
                 QSizePolicy.Expanding,
                 QSizePolicy.Fixed))
         self.setMinimumSize(400, 600)
-        self.setMaximumSize(400, 700)
+        self.setMaximumSize(400, 600)
         self.grid = QGridLayout()
         self.faceChecks = FaceOptions()
         self.draw()
@@ -373,18 +373,23 @@ class ImageBox(QWidget):
                         amount_to_go_down = -.2*height
                         painter.drawPixmap(rect[0] - width/6.0, rect[1] + amount_to_go_down, overlay_copy)
                     elif icon_name == "blurry.jpg":
-                        face_image = base.copy(rect[0]+5, rect[1]-10, width-10, height+20).toImage()
+#                        face_image = base.copy(rect[0]+6, rect[1]-10, width-12, height+20).toImage()
+                        face_image = base.copy(rect[0], rect[1], width, height).toImage()
+
                         blurred_image = face_image.copy()
-                        b_a = width/12
-                        cur = QColor.fromRgb(blurred_image.pixel(b_a/2, b_a/2))
-                        for y in range(b_a, face_image.height() - b_a):
-                            for x in range(b_a, face_image.width() - b_a):
-                                if (x+ b_a/2)%b_a == 0 or (y+ b_a/2)%b_a == 0:
-                                    cur = QColor.fromRgb(blurred_image.pixel(x, y))
+
+                        blur_amount = width/8
+                        current_color = QColor.fromRgb(blurred_image.pixel(blur_amount/2, blur_amount/2))
+                        for y in range(blur_amount, face_image.height() - blur_amount):
+                            for x in range(blur_amount, face_image.width() - blur_amount):
+                                if (x+ blur_amount/2)%blur_amount == 0 or (y+ blur_amount/2)%blur_amount == 0:
+                                    current_color = QColor.fromRgb(blurred_image.pixel(x, y))
                                 else: 
-                                    blurred_image.setPixel(x, y, qRgb(cur.red(), cur.green(), cur.blue()))
+                                    blurred_image.setPixel(x, y, qRgb(current_color.red(), current_color.green(), current_color.blue()))
                         blurred_pixmap = QPixmap.fromImage(blurred_image)
-                        painter.drawPixmap(rect[0], rect[1], blurred_pixmap)
+                        amount_to_go_down = 0
+                        
+                        painter.drawPixmap(rect[0], rect[1]+amount_to_go_down, blurred_pixmap)
                     elif icon_name == "trashcan.png":
                         for face in faces:
                             face.attachedObjects = []       
@@ -457,11 +462,11 @@ class GuiWindow(QWidget):
             
             if self.draw_nums:
                 for i in range(len(self.face_list)):
-                    vid.showRectangle(self.face_list[i].getPosition(),self.face_list[i].getID())
-#                    if not face.isObscured():
-#                        vid.showRectangle(self.face_list[i].getPosition(),self.face_list[i].getID())
-#                    else:
-#                        vid.showRectangle(self.face_list[i].getPredictedPosition(),self.face_list[i].getID())
+#                    vid.showRectangle(self.face_list[i].getPosition(),self.face_list[i].getID())
+                    if not face.isObscured():
+                        vid.showRectangle(self.face_list[i].getPosition(),self.face_list[i].getID())
+                    else:
+                        vid.showRectangle(self.face_list[i].getPredictedPosition(),self.face_list[i].getID())
                 
                 
                 
@@ -478,7 +483,8 @@ class GuiWindow(QWidget):
 #                    rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
 #                else:
 #                    tuples = face.getPredictedPosition()
-#                    rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
+#                    if tuples:
+#                        rects.append([tuples[0][0], tuples[0][1], tuples[1][0], tuples[1][1]])
                
                 
 
