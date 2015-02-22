@@ -7,13 +7,7 @@ import sys
 from PySide.QtCore import *
 from PySide.QtGui import *
 import os
-# Change for particular machine
-#sys.path.append("/Users/Katja/COMPS/facial-recognition/Tracking")
-#sys.path.append("/Accounts/collierk/COMPS/facial-recognition/Tracking")
-#import architecture
-#from architecture import *
 import cv2
-#from PIL import Image
 from time import gmtime, strftime
 import subprocess
 
@@ -31,35 +25,9 @@ class PictureButton(QPushButton):
 
     def click(self):
         '''Called automatically when button is clicked'''
-        #print self.name, "was clicked!"
         self.window.add_option_clicked(self.name)
    
    
-class DrawOptions(QWidget):
-    '''Currently creates empty grid. Will include buttons with icons for drawing on image.'''
-    def __init__(self):
-        QWidget.__init__(self)
-
-        self.setSizePolicy (
-            QSizePolicy (
-                QSizePolicy.Expanding,
-                QSizePolicy.Fixed))
-        self.setMinimumSize(200, 100)
-
-    def paintEvent (self, eventQPaintEvent):
-        '''Creates a 4x2 grid that someday will be buttons. Called automatically.'''
-        myQPainter = QPainter(self)
-        myQPainter.setRenderHint(QPainter.Antialiasing)
-        
-        winHeight = self.size().height()
-        heightStep = winHeight / 2
-        winWidth  = self.size().width()
-        widthStep = winWidth / 4
-
-        myQPainter.setPen(Qt.black)
-        for i in range(8):
-            myQPainter.drawLine(QPoint(i * widthStep, 0), QPoint(i * widthStep, winHeight))
-            myQPainter.drawLine(QPoint(0,heightStep * i), QPoint(winWidth,heightStep * i))
         
 
 class AddOptions(QWidget):
@@ -116,7 +84,6 @@ class FaceOptions(QWidget):
     def draw(self):
         '''Note: don't call this except in initialization.'''
         grid = QGridLayout()
-#        print len(self.faces)
         count = 0
         for img in self.faces:
             pixmap = QPixmap(img)
@@ -163,14 +130,7 @@ class ControlBox(QWidget):
 
     def draw(self):
         grid = QGridLayout()
-        
-#        ppbutton = QPushButton("Play/Pause")
-#        ppbutton.setSizePolicy (
-#            QSizePolicy (
-#                QSizePolicy.Expanding,
-#                QSizePolicy.Fixed))
-#        ppbutton.setMinimumSize(200, 50)
-#        grid.addWidget(ppbutton, 0, 0)
+
         
         font = QFont("ArialMT",25)
 
@@ -183,12 +143,6 @@ class ControlBox(QWidget):
         
         addOptions = AddOptions(self.window)
         grid.addWidget(addOptions, 3, 0)
-        
-#        label = QLabel("Draw")
-#        grid.addWidget(label,4,0,Qt.AlignHCenter)
-        
-#        drawOptions = DrawOptions()
-#        grid.addWidget(drawOptions, 5, 0)
         
         self.setLayout(grid)
 
@@ -224,7 +178,6 @@ class ImageBox(QWidget):
         width = self.pixmap.size().width()
         height = self.pixmap.size().height()
         relationship = float(width)/height
-#        self.piclabel.setMaximumSize(relationship*500, 500)
         self.piclabel.setMinimumSize(relationship*600, 600)
         self.grid.addWidget(self.piclabel,0,0,1,3)
         
@@ -320,15 +273,12 @@ class GuiWindow(QWidget):
     def add_option_clicked(self, button_name):
         '''When PictureButton is clicked, tells main image to redraw appropriately.'''
         checked_boxes = self.rightbox.faceChecks.getCheckedFaces()
-#        print checked_boxes
-#        print button_name
         self.leftbox.draw_object(checked_boxes,button_name)
         
 
 def detect(path):
     '''Detects areas of given image that contain faces. Will be replaced by something from the architecture.'''
     img = cv2.imread(path)
-    # Change for particular machine.
     face_cascade = cv2.CascadeClassifier("face_cascade2.xml")
     rects = face_cascade.detectMultiScale(img, 1.3, 4, cv2.cv.CV_HAAR_SCALE_IMAGE, (20,20))
 
@@ -343,7 +293,6 @@ def get_faces(image_path):
     rects, img = detect(image_path)
     faces = []
     for rect in rects:
-#        print rect
         listrect = rect.tolist()
         qimg = QImage(image_path)
         copy = qimg.copy(listrect[0],listrect[1],listrect[2]-listrect[0],listrect[3]-listrect[1])
