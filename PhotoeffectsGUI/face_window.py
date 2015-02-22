@@ -272,34 +272,22 @@ class ImageBox(QWidget):
                 amount_to_go_down = 0
                 painter.drawPixmap(rect[0], rect[1] + amount_to_go_down, overlay_copy)
             elif icon_name == "blurry.jpg":
-                face_image = base.copy(rect[0]+5, rect[1]-10, width-10, height+20).toImage()
+                face_image = base.copy(rect[0], rect[1], width, height).toImage()
+
                 blurred_image = face_image.copy()
-                b_a = width/12
-                cur = QColor.fromRgb(blurred_image.pixel(b_a/2, b_a/2))
-                for y in range(b_a, face_image.height() - b_a):
-                    for x in range(b_a, face_image.width() - b_a):
-                        if (x+ b_a/2)%b_a == 0 or (y+ b_a/2)%b_a == 0:
-                            cur = QColor.fromRgb(blurred_image.pixel(x, y))
+
+                blur_amount = width/8
+                current_color = QColor.fromRgb(blurred_image.pixel(blur_amount/2, blur_amount/2))
+                for y in range(blur_amount, face_image.height() - blur_amount):
+                    for x in range(blur_amount, face_image.width() - blur_amount):
+                        if (x+ blur_amount/2)%blur_amount == 0 or (y+ blur_amount/2)%blur_amount == 0:
+                            current_color = QColor.fromRgb(blurred_image.pixel(x, y))
                         else: 
-                            blurred_image.setPixel(x, y, qRgb(cur.red(), cur.green(), cur.blue()))
-                           #set pixel to cur 
-                        #avg = [0.0, 0.0, 0.0]
-                        #count = 0
-                        #for i in range(-8, 8):
-                         #   for j in range(-8, 8):
-                          #      color = QColor.fromRgb(blurred_image.pixel(x + i, y + j))
-                           #     avg[0] += color.red()
-                            #    avg[1] += color.green()
-                             #   avg[2] += color.blue()
-                              #  count += 1
-                        
-                
-                #"pull just the face from the image"
-                
-                
-                
+                            blurred_image.setPixel(x, y, qRgb(current_color.red(), current_color.green(), current_color.blue()))
                 blurred_pixmap = QPixmap.fromImage(blurred_image)
-                painter.drawPixmap(rect[0], rect[1], blurred_pixmap)
+                amount_to_go_down = 0
+
+                painter.drawPixmap(rect[0], rect[1]+amount_to_go_down, blurred_pixmap)
             else:
                 print "Not implemeneted yet"
         

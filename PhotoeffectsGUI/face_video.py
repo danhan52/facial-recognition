@@ -8,7 +8,7 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 import os
 # Change for particular machine
-sys.path.append("/Users/Katja/COMPS/facial-recognition/Tracking")
+#sys.path.append("/Users/Katja/COMPS/facial-recognition/Tracking")
 #sys.path.append("/Accounts/collierk/COMPS/facial-recognition/Tracking")
 #import architecture
 #from architecture import *
