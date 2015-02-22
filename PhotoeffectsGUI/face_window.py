@@ -8,8 +8,8 @@ from PySide.QtCore import *
 from PySide.QtGui import *
 import os
 # Change for particular machine
-sys.path.append("/Users/Katja/COMPS/facial-recognition/Tracking")
-sys.path.append("/Accounts/collierk/COMPS/facial-recognition/Tracking")
+#sys.path.append("/Users/Katja/COMPS/facial-recognition/Tracking")
+#sys.path.append("/Accounts/collierk/COMPS/facial-recognition/Tracking")
 #import architecture
 #from architecture import *
 import cv2
@@ -116,7 +116,7 @@ class FaceOptions(QWidget):
     def draw(self):
         '''Note: don't call this except in initialization.'''
         grid = QGridLayout()
-
+#        print len(self.faces)
         count = 0
         for img in self.faces:
             pixmap = QPixmap(img)
@@ -332,8 +332,8 @@ class GuiWindow(QWidget):
     def add_option_clicked(self, button_name):
         '''When PictureButton is clicked, tells main image to redraw appropriately.'''
         checked_boxes = self.rightbox.faceChecks.getCheckedFaces()
-        print checked_boxes
-        print button_name
+#        print checked_boxes
+#        print button_name
         self.leftbox.draw_object(checked_boxes,button_name)
         
 
@@ -341,7 +341,7 @@ def detect(path):
     '''Detects areas of given image that contain faces. Will be replaced by something from the architecture.'''
     img = cv2.imread(path)
     # Change for particular machine.
-    face_cascade = cv2.CascadeClassifier("/Accounts/collierk/Downloads/haarcascade_frontalface_alt.xml")
+    face_cascade = cv2.CascadeClassifier("face_cascade2.xml")
     rects = face_cascade.detectMultiScale(img, 1.3, 4, cv2.cv.CV_HAAR_SCALE_IMAGE, (20,20))
 
     if len(rects) == 0:
@@ -355,7 +355,7 @@ def get_faces(image_path):
     rects, img = detect(image_path)
     faces = []
     for rect in rects:
-        print rect
+#        print rect
         listrect = rect.tolist()
         qimg = QImage(image_path)
         copy = qimg.copy(listrect[0],listrect[1],listrect[2]-listrect[0],listrect[3]-listrect[1])
