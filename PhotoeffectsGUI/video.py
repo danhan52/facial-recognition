@@ -95,7 +95,8 @@ class Video:
             while(count < len(scoreList)):
                 if scoreList[count][0] < self.minRemovalScore:
                     scoreList.pop(count)
-                count += 1
+                else:
+                    count += 1
             mergeSortScore(scoreList)
             # tools for remembering
             usedRects = []

@@ -248,9 +248,10 @@ class ImageBox(QWidget):
     def set_image(self, img, faces, face_pics):
         '''Called every frame. Draws main image + effects.'''
         self.pixmap = img
-        self.draw_objects(faces)
         self.face_pics = face_pics
         self.all_faces = faces
+        self.draw_objects(faces)
+        
         
     def draw(self):
         '''Called once, sets up picture area and screenshot button.'''
