@@ -52,8 +52,9 @@ class Video:
         if self.writing:
             self.openCSVWrite("variables.csv")
 
-    """ Getters """
+    # Getters
     def getFaces(self):
+        """returns all non-ghost faces"""
         allFaceList = self.visibleFaceList + self.notVisibleFaceList
         i = 0
         while i < len(allFaceList):
@@ -67,7 +68,7 @@ class Video:
     def getCurrentFrame(self):
         return self.frameImage
 
-    """ Main interface for running everything else"""
+    # Main interface for running everything else
     def findFaces(self):
         """detects all faces with the frame then analyzes the frame to determine
         which face belongs to which face object"""
@@ -82,8 +83,10 @@ class Video:
         self.frameCount+=1
         #self.setAllColorProfiles()
 
-    """ The logic for finding the faces"""
+    # The logic for finding the faces
     def analyzeFrame(self, rects):
+        """compares all detected faces to previously known faces and determines which 
+        corresponds to which based on the score function"""
         if (len(self.visibleFaceList)<1 and len(self.notVisibleFaceList)<1):
             for i in range(len(rects)):
                 self.addNewFace(rects[i])
@@ -126,7 +129,6 @@ class Video:
             count = 0
             while count < len(self.visibleFaceList):
                 if (count not in usedVisibleFaces):
-#                   print "Visible to not visible"
                     face = self.visibleFaceList.pop(count)
                     face.setObscured(True)
                     self.notVisibleFaceList.append(face)
@@ -136,15 +138,14 @@ class Video:
             notVisLen = len(self.notVisibleFaceList)
             for i in reversed(range(notVisLen)):
                 if (i in usedNotVisibleFaces):
-#                   print "Not visible to visible"
                     face = self.notVisibleFaceList.pop(i)
                     face.setObscured(False)
                     self.visibleFaceList.append(face)
             # create new faces for all unmatched rects
             for i in range(len(rects)):
                 if (i not in usedRects):
-#                   print "Make new face"
                     self.addNewFace(rects[i])
+        # update kalman filter for all faces (visible and not)
         for face in self.visibleFaceList:
             self.updateKalman(face)
             # face.colorProfile = setProfile(self.frameImage,face.getPosition(),self.binNum)
@@ -158,12 +159,13 @@ class Video:
         time = dt.datetime.now()
         recentPosition = face.getPosition()
         if not (recentPosition==[]):
+            # get change in time
             deltaTime = (time - recentPosition[2]).total_seconds()
+            # if face hasn't been seen for 0.5 seconds, use predicted position for score
             if deltaTime > 0.5 and face.predictedPosition != []:
                 recentPosition = face.predictedPosition
             face.getVelocity()
-            # get time change
-            # get size change
+            # get change in width
             width = face.getWidth()
             rectWidth = abs(rect[0]-rect[2])
             diffWidths = 1.0*abs(width-rectWidth)/width
@@ -172,8 +174,7 @@ class Video:
             middleOfFace = ((recentPosition[1][0]+recentPosition[0][0])/2,(recentPosition[1][1]+recentPosition[0][1])/2)
             diffMiddles = math.pow(math.pow(middleOfFace[0]-middleOfRect[0], 2) + math.pow(middleOfFace[1]-middleOfRect[1], 2), 0.5)
             
-            # asymptote equation such that after the difference in middles is more than 1 radius away,
-            # prob will be down to 0.25 but after that it slowly goes to 0 never quite reaching it
+            # asymptote equation similar to half normal. f(1) = 0.25
             xMid = math.pow(diffMiddles/self.deviation[0],3)
             scoreMid = 1.0/((3*xMid+1))
             xWidth = math.pow(diffWidths/self.deviation[2],3)
@@ -181,9 +182,7 @@ class Video:
             xTime = math.pow(deltaTime/self.deviation[1],3)
             scoreTime = 1.0/((3*xTime+1))
             score = self.weights[0]*scoreMid+self.weights[2]*scoreWidth+self.weights[1]*scoreTime
-
-            # linearScore = self.weights[0]*diffMiddles+self.weights[2]*diffWidths+self.weights[1]*deltaTime
-            # score = 1/linearScore
+            # potentially write to data file
             if self.writing:
                 data = [face.getID(),diffMiddles,diffWidths,deltaTime,score]
                 self.writeToCSV(data)
@@ -191,31 +190,31 @@ class Video:
         else:
             return 0
 
-    """Helper functions"""    
+    # Helper functions
     def setAllColorProfiles(self):
         for face in self.visibleFaceList:
             prof = setProfile(self.frameImage, face.getPosition(), self.binNum)
             face.setColorProfile(prof)
 
     def detectAll(self):
-        """Run face detection algorithm on the whole picture and make adjustments 
-        to the faces based on where the are and where they should be"""
+        """Run face detection algorithm on the whole picture and return face positions"""
         rects = self.cascade.detectMultiScale(self.frameImage, 1.3, 4, cv2.cv.CV_HAAR_SCALE_IMAGE, (20,20))
         return rects
 
     def pruneFaceList(self):
+        """remove faces in not visible list if they haven't been seen for timeOut seconds"""
         i = 0
         while i < len(self.notVisibleFaceList):
             pos = self.notVisibleFaceList[i].getPosition()
             timeSinceDetection = dt.datetime.now()-pos[2]
             if timeSinceDetection.total_seconds() > self.timeOut:
-#               print "Removed face FOREVER"
                 self.inactiveFaceList.append(self.notVisibleFaceList.pop(i))
             # only increment when face isn't popped
             else:
                 i += 1
 
     def addNewFace(self, location):
+        """create new face object for a newly detected face"""
         fc = Face(self.weights)
         fc.setID(self.faceIDCount)
         self.totalFaceCount += 1
@@ -224,6 +223,7 @@ class Video:
         self.visibleFaceList.append(fc)
 
     def listHelper(self, rects):
+        """create list with scores for all pairs of detected and previously known faces"""
         tupList = []
         for i in range(len(rects)):
             for j in range(len(self.visibleFaceList)):
@@ -235,17 +235,18 @@ class Video:
         return tupList
 
     def clean(self):
+        """remove "ghost faces" which are faces that have been seen less than 5 frames
+        and are in the not visible list"""
         i = 0
         while i < len(self.notVisibleFaceList):
             if len(self.notVisibleFaceList[i].getPrevPositions()) < self.cleanThresh:
                 self.notVisibleFaceList.pop(i)
                 self.totalFaceCount -= 1
-#               print "Deleted ghost face"
             # only increment when face isn't popped
             else:
                 i += 1
 
-    """Opencv interface functions"""
+    # Opencv interface functions
     def readFrame(self):
         """read frame from openCV info"""
         self.previousFrame = self.frameImage
@@ -272,10 +273,10 @@ class Video:
         self.vidcap.release()
         cv2.destroyWindow("show")
 
-    """Meant for testing"""
+    # get data for testing
     def openVidWrite(self, filen):
         fourcc = int(cv2.cv.CV_FOURCC('I', 'Y', 'U', 'V'))
-        fps = 15        # self.vidcap.get(cv2.cv.CV_CAP_PROP_FPS)
+        fps = 10        # self.vidcap.get(cv2.cv.CV_CAP_PROP_FPS)
         framew = int(self.vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
         frameh = int(self.vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
         self.vidwrite = cv2.VideoWriter()
@@ -296,7 +297,7 @@ class Video:
     def writeToCSV(self, data):
         self.cwrite.writerow(data)
         
-    """Prediction stuff"""
+    # Prediction stuff
     def updateKalman(self, face1):
         recentPosition = face1.getPosition()
         topLeft = (recentPosition[0])
