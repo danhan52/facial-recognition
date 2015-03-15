@@ -422,3 +422,160 @@ class Video:
             face1.predictedPosition = []
         else:
             face1.predictedPosition = prediction
+
+
+    def colorEstimateNextPosition(self, face):
+        #use color information to predict new location of face
+        #.3 value used in function is arbitrary and untested
+
+        framew = int(self.vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_WIDTH))
+        frameh = int(self.vidcap.get(cv2.cv.CV_CAP_PROP_FRAME_HEIGHT))
+        oldWidth = face.position[1][0] - face.position[0][0]
+        oldHeight = face.position[1][1] - face.position[0][1]
+        width = oldWidth
+        height = oldHeight
+        newPosition = []
+        newPosition.append([face.position[0][1], face.position[0][0]])
+        newPosition.append([face.position[1][1], face.position[1][0]])
+
+        #take a sample of pixels to find the average probability for pixels in the face based on previous location
+        pAve = float(0)
+        for i in range(10):
+            for j in range(height):
+                pAve += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] + (i+1)/10*width], self.binNum)
+            for j in range(width):
+                pAve += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + (i+1)/10*height][newPosition[0][1] + j], self.binNum)
+        pAve = pAve / ((height + width) * 10)
+
+        #check left boundary of face
+        p = float(0)
+        var = True
+        while(var):
+            #calculate average probability of two left-most columns of pixels in face
+            for i in range(2):
+                for j in range(height):
+                    p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] + i], self.binNum)
+            p /= 2*height
+            #if columns have low probability, remove them from the face
+            if(p < .3*pAve):
+                newPosition[0][1] += 2
+                width -= 2
+                #make sure face dimensions are positive
+                if(newPosition[0][1] >= newPosition[1][1]):
+                    newPosition[0][1] = newPosition[1][1]
+                    var = False
+            else:
+                var = False
+        var = True
+        #add columns to the left of current boundary if their average probabilities are high
+        while(var):
+            for i in range(2):
+                for j in range(height):
+                    p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[0][1] - i - 1], self.binNum)
+            p /= 2*height
+            if(p > .3*pAve): #VALUE
+                newPosition[0][0] -= 2
+                width += 2
+                #make sure face boundary is within frame
+                if(newPosition[0][1] < 0):
+                    newPosition[0][1] = 0
+                    var = False
+                else:
+                    var = False
+        #do the same with the right boundary of the face
+        p = 0
+        var = True
+        while(var):
+            for i in range(2):
+                for j in range(height):
+                    p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[1][1] - i], self.binNum)
+            p /= 2*height
+            if(p < .3*pAve):
+                newPosition[1][0] -= 2
+                width -= 2
+                if(newPosition[0][1] >= newPosition[1][1]):
+                    newPosition[1][1] = newPosition[0][1]
+                    var = False
+            else:
+                var = False
+        var = True
+        while(var):
+            for i in range(2):
+                for j in range(height):
+                    p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + j][newPosition[1][1] + i + 1], self.binNum)
+            p /= 2*height
+            if(p > .3*pAve):
+                newPosition[1][1] += 2
+                width += 2
+                if(newPosition[1][1] >= framew):
+                    newPosition[1][1] = framew - 1
+                    var = False
+                else:
+                    var = False
+        #do the same with the top boundary of thef ace
+        p = 0
+        var = True
+        while(var):
+            for i in range(2):
+                for j in range(width):
+                    p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + i][newPosition[0][1] + j], self.binNum)
+            p /= 2*width
+            if(p < .3*pAve): #VALUE
+                newPosition[0][0] += 2
+                height -= 2
+                if(newPosition[0][0] >= newPosition[1][0]):
+                    print "height is 0"
+                    newPosition[0][0] = newPosition[1][0]
+                    var = False
+            else:
+                var = False
+        var = True
+        while(var):
+            for i in range(2):
+                for j in range(width):
+                    p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] - 1 - i][newPosition[0][1] + j], self.binNum)
+            p /= 2*width
+            if(p > .3*pAve):
+                newPosition[0][0] -= 2
+                height += 2
+                if(newPosition[0][0] < 0):
+                    newPosition[0][0] = 0
+                    var = False
+                else:
+                    var = False
+        #do the same with the bottom boundary of the face
+        p = 0
+        var = True
+        while(var):
+            for i in range(2):
+                for j in range(width):
+                    p += getPixelP(face.colorProfile, self.frameImage[newPosition[1][0] - i][newPosition[0][1] + j], self.binNum)
+            p /= 2*width
+            if(p < .3*pAve):
+                newPosition[1][0] -= 2
+                height -= 2
+                if(newPosition[0][0] >= newPosition[1][0]):
+                    newPosition[1][0] = newPosition[0][0]
+                    var = False
+            else:
+                var = False
+        var = True
+        while(var):
+            for i in range(2):
+                for j in range(width):
+                    p += getPixelP(face.colorProfile, self.frameImage[newPosition[0][0] + 1 + i][newPosition[0][1] + j], self.binNum)
+            p /= 2*width
+            if(p > .3*pAve):
+                newPosition[1][0] -= 2
+                height += 2
+                if(newPosition[1][0] >= frameh-1):
+                    newPosition[1][0] = frameh-1
+                    var = False
+                else:
+                    var = False
+        #maintain height/width ratio of face to avoid including neck region
+        height = newPosition[1][0] - newPosition[0][0]
+        width = newPosition[1][1] - newPosition[0][1]
+        if(float(height)/width > float(oldHeight)/oldWidth):
+            newPosition[1][1] = int(newPosition[0][1] + oldHeight*width/oldWidth)
+        return [(newPosition[0][1], newPosition[0][0]), (newPosition[1][1], newPosition[1][0])]
